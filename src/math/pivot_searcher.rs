@@ -1,3 +1,6 @@
+use crate::galois_field::tables::{GF_EXP, GF_INVERSE, GF_MUL_TABLE};
+use crate::math::addmul::addmul;
+
 pub struct PivotSearcher {
   k: usize,
   ipiv: Vec<bool>,
@@ -83,6 +86,7 @@ pub fn invert_matrix(matrix: &mut [u8], k: usize) -> Result<(), &'static str> {
               if i != icol {
                   c = p[icol];
                   p[icol] = 0;
+                  // TODO implement addmul
                   addmul(&mut p[0..k], pivot_row, c);
               }
               p = &mut p[k..];
@@ -114,9 +118,9 @@ pub fn create_inverted_vdm(vdm: &mut [u8], k: usize) {
   for i in 1..k {
     let mul_p_i = &GF_MUL_TABLE[GF_EXP[i] as usize];
     for j in (k-1-(i-1))..(k-1) {
-      c[j] ^= mul_p_i[c[j+1]];
+      c[j] ^= mul_p_i[c[j+1]] as usize;
     }
-    c[k-1] ^= GF_EXP[i]
+    c[k-1] ^= GF_EXP[i] as usize;
   }
 
   for row in 0..k {
@@ -129,13 +133,13 @@ pub fn create_inverted_vdm(vdm: &mut [u8], k: usize) {
     let mut t: u8 = 1;
     b[k-1] = 1;
 
-    for i in (0..k-1).rev {
-      b[i] = c[i+1] ^ mul_p_row[b[i+1]];
-      t = b[i] ^ mul_p_row[t];
+    for i in (0..k-1).rev() {
+      b[i] = c[i+1] ^ mul_p_row[b[i+1]] as usize;
+      t = (b[i] ^ (mul_p_row[t as usize]) as usize) as u8;
     }
 
     let mul_t_inv = &GF_MUL_TABLE[GF_INVERSE[index] as usize];
-    for col in 0..k {
+    for col in 0..k{
       vdm[col*k+row] = mul_t_inv[b[col]];
     }
   }
