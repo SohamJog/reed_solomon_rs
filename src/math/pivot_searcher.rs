@@ -15,10 +15,8 @@ impl PivotSearcher {
     }
 
     pub fn search(&mut self, col: usize, matrix: &[u8]) -> Option<(usize, usize)> {
-        println!("Searching for a pivot...");
         if !self.ipiv[col] && matrix[col * self.k + col] != 0 {
             self.ipiv[col] = true;
-            println!("Found at {}, {}", col, col);
             return Some((col, col));
         }
 
@@ -30,25 +28,13 @@ impl PivotSearcher {
             for i in 0..self.k {
                 if !self.ipiv[i] && matrix[row * self.k + i] != 0 {
                     self.ipiv[i] = true;
-                    println!(
-                        "Found at {}, {} and matrix[row*k+i] = {}",
-                        row,
-                        i,
-                        matrix[row * self.k + i]
-                    );
-                    return Some((row, i));
+                    return Some((i, row));
                 }
             }
         }
 
         None
     }
-}
-
-pub fn swap(a: &mut u8, b: &mut u8) {
-    let tmp = *a;
-    *a = *b;
-    *b = tmp;
 }
 
 pub fn swap_row(matrix: &mut [u8], k: usize, row1: usize, row2: usize) {
@@ -58,15 +44,12 @@ pub fn swap_row(matrix: &mut [u8], k: usize, row1: usize, row2: usize) {
 }
 
 pub fn invert_matrix(matrix: &mut [u8], k: usize) -> Result<(), &'static str> {
-    println!("Inverting matrix...");
     let mut pivot_searcher = PivotSearcher::new(k);
     let mut indxc = vec![0; k];
     let mut indxr = vec![0; k];
     let mut id_row = vec![0; k];
 
     for col in 0..k {
-        println!("In column {}", col);
-        println!("matrix: {:?}", matrix);
         let (icol, irow) = match pivot_searcher.search(col, matrix) {
             Some((icol, irow)) => (icol, irow),
             None => return Err("pivot not found"),
@@ -74,7 +57,6 @@ pub fn invert_matrix(matrix: &mut [u8], k: usize) -> Result<(), &'static str> {
 
         if irow != icol {
             swap_row(matrix, k, irow, icol);
-            println!("matrix: {:?}", matrix);
         }
 
         indxr[col] = irow;
@@ -122,11 +104,19 @@ pub fn invert_matrix(matrix: &mut [u8], k: usize) -> Result<(), &'static str> {
     for i in 0..k {
         if indxr[i] != indxc[i] {
             for row in 0..k {
-                let (left, right) = matrix.split_at_mut(row * k + indxr[i]);
-                let left_element = &mut left[row * k + indxr[i]];
-                let right_element = &mut right[(indxc[i] - indxr[i]) + row * k];
-
-                swap(left_element, right_element);
+                matrix.swap(row * k + indxr[i], row * k + indxc[i]);
+            }
+        }
+        for j in i + 1..k {
+            if indxr[j] == indxr[i] {
+                indxr[j] = indxc[i];
+            } else if indxr[j] == indxc[i] {
+                indxr[j] = indxr[i];
+            }
+            if indxc[j] == indxc[i] {
+                indxc[j] = indxr[i];
+            } else if indxc[j] == indxr[i] {
+                indxc[j] = indxc[i];
             }
         }
     }
@@ -198,33 +188,33 @@ mod tests {
 
     // TODO: Figure out why this test fails. It also fails on infectious with the same error message
 
-    // #[test]
-    // fn test_invert_non_identity_matrix_gf256() {
-    //     // Example of a non-identity matrix in GF(256)
-    //     let mut matrix = vec![
-    //         1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 7, 7, 6, 6, 1,
-    //     ];
+    #[test]
+    fn test_invert_non_identity_matrix_gf256() {
+        // Example of a non-identity matrix in GF(256)
+        let mut matrix = vec![
+            1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 7, 7, 6, 6, 1,
+        ];
 
-    //     let k = 5; // Dimension of the matrix
+        let k = 5; // Dimension of the matrix
 
-    //     // Call invert_matrix function
-    //     let result = invert_matrix(&mut matrix, k);
+        // Call invert_matrix function
+        let result = invert_matrix(&mut matrix, k);
 
-    //     // Check if the function succeeded
-    //     assert!(
-    //         result.is_ok(),
-    //         "Expected Ok but got Err: {:?}",
-    //         result.err()
-    //     );
+        // Check if the function succeeded
+        assert!(
+            result.is_ok(),
+            "Expected Ok but got Err: {:?}",
+            result.err()
+        );
 
-    //     // Expected result after inversion in GF(256)
-    //     let expected_matrix = vec![
-    //         1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 123, 123, 1, 122, 122, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0,
-    //     ];
+        // Expected result after inversion in GF(256)
+        let expected_matrix = vec![
+            1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 123, 123, 1, 122, 122, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0,
+        ];
 
-    //     // Verify the matrix is correct
-    //     assert_eq!(matrix, expected_matrix);
-    // }
+        // Verify the matrix is correct
+        assert_eq!(matrix, expected_matrix);
+    }
 
     #[test]
     fn another_test_invert_non_identity_matrix_gf256() {
