@@ -95,7 +95,6 @@ pub fn invert_matrix(matrix: &mut [u8], k: usize) -> Result<(), &'static str> {
                         addmul(row1, row2, c);
                     }
                 }
-                //p = &mut p[k..];
             }
         }
         id_row[icol] = 0;
