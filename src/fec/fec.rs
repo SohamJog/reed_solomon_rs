@@ -1,4 +1,5 @@
 use crate::galois_field::tables::{GF_EXP, GF_MUL_TABLE};
+use crate::math::addmul::addmul;
 use crate::math::pivot_searcher::create_inverted_vdm;
 use std::error::Error;
 
@@ -7,6 +8,11 @@ pub struct FEC {
     pub n: usize,
     pub enc_matrix: Vec<u8>,
     pub vand_matrix: Vec<u8>,
+}
+
+pub struct Share {
+    pub number: usize,
+    pub data: Vec<u8>,
 }
 
 impl FEC {
@@ -60,4 +66,66 @@ impl FEC {
             vand_matrix,
         })
     }
+
+    pub fn required(&self) -> usize {
+        self.k
+    }
+
+    pub fn total(&self) -> usize {
+        self.n
+    }
+
+    // Encode will take input data and encode to the total number of pieces n this
+    // *FEC is configured for. It will call the callback output n times.
+    //
+    // The input data must be a multiple of the required number of pieces k.
+    // Padding to this multiple is up to the caller.
+    //
+    // Note that the byte slices in Shares passed to output may be reused when
+    // output returns.
+
+    pub fn encode<F>(&self, input: &[u8], mut output: F) -> Result<(), Box<dyn std::error::Error>>
+    where
+        F: FnMut(Share),
+    {
+        let size = input.len();
+        let k = self.k;
+        let n = self.n;
+        let enc_matrix = &self.enc_matrix;
+
+        if size % k != 0 {
+            return Err(format!("input length must be a multiple of {}", k).into());
+        }
+
+        let block_size = size / k;
+
+        for i in 0..k {
+            output(Share {
+                number: i,
+                data: input[i * block_size..(i + 1) * block_size].to_vec(),
+            });
+        }
+
+        let mut fec_buf = vec![0u8; block_size];
+        for i in k..n {
+            fec_buf.iter_mut().for_each(|byte| *byte = 0);
+
+            for j in 0..k {
+                addmul(
+                    &mut fec_buf,
+                    &input[j * block_size..(j + 1) * block_size],
+                    enc_matrix[i * k + j],
+                );
+            }
+
+            output(Share {
+                number: i,
+                data: fec_buf.clone(),
+            });
+        }
+
+        Ok(())
+    }
+
+    
 }
