@@ -185,8 +185,6 @@ mod tests {
         assert_eq!(matrix, expected_matrix);
     }
 
-    // TODO: Figure out why this test fails. It also fails on infectious with the same error message
-
     #[test]
     fn test_invert_non_identity_matrix_gf256() {
         // Example of a non-identity matrix in GF(256)

@@ -1,6 +1,6 @@
 use crate::galois_field::tables::{GF_EXP, GF_MUL_TABLE};
 use crate::math::addmul::addmul;
-use crate::math::pivot_searcher::create_inverted_vdm;
+use crate::math::pivot_searcher::{invert_matrix, create_inverted_vdm};
 use std::error::Error;
 
 pub struct FEC {
@@ -13,6 +13,26 @@ pub struct FEC {
 pub struct Share {
     pub number: usize,
     pub data: Vec<u8>,
+}
+
+impl PartialEq for Share {
+    fn eq(&self, other: &Self) -> bool {
+        self.number == other.number
+    }
+}
+
+impl Eq for Share {}
+
+impl PartialOrd for Share {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Share {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.number.cmp(&other.number)
+    }
 }
 
 impl FEC {
@@ -127,5 +147,125 @@ impl FEC {
         Ok(())
     }
 
-    
+    pub fn encode_single(
+        &self,
+        input: &[u8],
+        output: &mut [u8],
+        num: usize,
+    ) -> Result<(), Box<dyn Error>> {
+        let size = input.len();
+        let k = self.k;
+        let n = self.n;
+        let enc_matrix = &self.enc_matrix;
+
+        if num >= n {
+            return Err(format!("num must be less than {}", n).into());
+        }
+
+        if size % k != 0 {
+            return Err(format!("input length must be a multiple of {}", k).into());
+        }
+
+        let block_size = size / k;
+
+        if output.len() != block_size {
+            return Err(format!("output length must be {}", block_size).into());
+        }
+
+        if num < k {
+            output.copy_from_slice(&input[num * block_size..(num + 1) * block_size]);
+            return Ok(());
+        }
+
+        output.fill(0);
+
+        for i in 0..k {
+            addmul(
+                output,
+                &input[i * block_size..(i + 1) * block_size],
+                enc_matrix[num * k + i],
+            );
+        }
+
+        Ok(())
+    }
+
+    pub fn rebuild<F>(
+        &self,
+        mut shares: Vec<Share>,
+        mut output: F,
+    ) -> Result<(), Box<dyn std::error::Error>>
+    where
+        F: FnMut(Share),
+    {
+        let size = shares.len();
+        let k = self.k;
+        let n = self.n;
+        let enc_matrix = &self.enc_matrix;
+
+        if size < k {
+            return Err(("Not enough Shares!").into());
+        }
+        let share_size = shares[0].data.len();
+        shares.sort();
+
+        let mut m_dec = vec![0u8; k * k];
+        let mut indexes = vec![0; k];
+        let mut sharesv: Vec<Vec<u8>> = vec![vec![]; k];
+
+        let mut shares_b_iter = 0;
+        let mut shares_e_iter = size - 1;
+
+        for i in 0..k {
+            let mut share_id: usize = 0;
+            let mut share_data: Vec<u8> = Vec::new();
+            if let Some(share) = shares.get(shares_b_iter) {
+                if share.number == i {
+                    share_id = share.number;
+                    share_data = share.data.clone();
+                    shares_b_iter += 1;
+                } else if let Some(share) = shares.get(shares_e_iter) {
+                    share_id = share.number;
+                    share_data = share.data.clone();
+                    shares_e_iter -= 1;
+                }
+            }
+            if share_id >= n {
+                return Err(format!("invalid share id {}", share_id).into());
+            }
+            if share_id < k {
+                m_dec[i * (k + 1)] = 1;
+                output(Share {
+                    number: share_id,
+                    data: share_data.clone(),
+                });
+            } else {
+                m_dec[i * k..i * k + k].copy_from_slice(&enc_matrix[share_id * k..share_id * k + k]);
+            }
+            sharesv[i] = share_data;
+            indexes[i] = share_id;
+        }
+
+        if invert_matrix(&mut m_dec, k).is_err() {
+            return Err(("Matrix inversion failed").into());
+        }
+        let mut buf = vec![0u8; share_size];
+
+        for i in 0..indexes.len() {
+            if indexes[i] >= k {
+                buf.fill(0);
+            }
+            for col in 0..k {
+                addmul(&mut buf, &sharesv[col], m_dec[i * k + col]);
+                output(Share {
+                    number: i,
+                    data: buf.clone(),
+                });
+            }
+        }
+
+        
+
+        Ok(())
+    }
 }
