@@ -1,8 +1,15 @@
 use crate::galois_field::tables::{GF_EXP, GF_LOG, GF_MUL_TABLE};
+use crate::math::addmul::addmul;
+use std::fmt;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct GfVal(pub u8);
 
+impl fmt::Display for GfVal {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
 impl GfVal {
     fn gfval_usize(self) -> usize {
         self.0 as usize
@@ -49,11 +56,16 @@ impl GfVal {
     }
 }
 
-//pub struct GfVals(pub [GfVal]);
-
 pub struct GfVals(pub Vec<GfVal>);
 
 impl GfVals {
+    pub fn to_string(&self) -> String {
+        self.0
+            .iter()
+            .map(|val| format!("{}", val))
+            .collect::<Vec<String>>()
+            .join(", ")
+    }
     pub fn gfvals_zero(size: usize) -> GfVals {
         let out = vec![GfVal(0); size];
         GfVals(out)
@@ -62,6 +74,14 @@ impl GfVals {
         unsafe {
             std::slice::from_raw_parts(
                 self.0.as_ptr() as *const u8,
+                self.0.len() * std::mem::size_of::<GfVal>(),
+            )
+        }
+    }
+    pub fn unsafe_bytes_mut(&mut self) -> &mut [u8] {
+        unsafe {
+            std::slice::from_raw_parts_mut(
+                self.0.as_mut_ptr() as *mut u8,
                 self.0.len() * std::mem::size_of::<GfVal>(),
             )
         }
@@ -218,8 +238,76 @@ impl GfMat {
         GfMat {
             r,
             c,
-            d: GfVals::gfvals_zero(r*c)
+            d: GfVals::gfvals_zero(r * c),
         }
+    }
+
+    pub fn to_string(&self) -> String {
+        if self.r == 0 {
+            return String::new();
+        }
+
+        let mut out = String::new();
+        for i in 0..self.r - 1 {
+            out.push_str(&format!("{:?}\n", self.index_row(i).to_string()));
+        }
+        out.push_str(&format!("{:?}", self.index_row(self.r - 1).to_string()));
+
+        out
+    }
+
+    fn index(&self, i: usize, j: usize) -> usize {
+        self.c * i + j
+    }
+
+    pub fn get(&self, i: usize, j: usize) -> GfVal {
+        self.d.0[self.index(i, j)]
+    }
+
+    pub fn set(&mut self, i: usize, j: usize, val: GfVal) {
+        let index = self.index(i, j);
+        self.d.0[index] = val; // This is fine; the mutable borrow is used here.
+    }
+
+    // Mutable version of index_row
+    pub fn index_row_mut(&mut self, i: usize) -> &mut [GfVal] {
+        let start = self.index(i, 0);
+        let end = self.index(i + 1, 0);
+        &mut self.d.0[start..end]
+    }
+
+    pub fn index_row(&self, i: usize) -> GfVals {
+        let start = self.index(i, 0);
+        let end = self.index(i + 1, 0);
+        GfVals(self.d.0[start..end].to_vec())
+    }
+
+    pub fn swap_row(&mut self, i: usize, j: usize) {
+        let mut tmp = vec![GfVal(0); self.c];
+        let ri = self.index_row(i).0;
+        let rj = self.index_row(j).0;
+
+        tmp.copy_from_slice(&ri);
+        for (idx, &val) in rj.iter().enumerate() {
+            self.set(i, idx, val);
+        }
+        for (idx, &val) in tmp.iter().enumerate() {
+            self.set(j, idx, val);
+        }
+    }
+
+    pub fn scale_row(&mut self, i: usize, val: GfVal) {
+        let ri = self.index_row_mut(i);
+        for j in 0..ri.len() {
+            ri[j] = ri[j].mul(val);
+        }
+    }
+
+    pub fn addmul_row(&mut self, i: usize, j: usize, val: GfVal) {
+        let ri = self.index_row(i);
+        let mut rj = self.index_row(j);
+
+        addmul(rj.unsafe_bytes_mut(), ri.unsafe_bytes(), val.0);
     }
 }
 
@@ -231,23 +319,60 @@ mod tests {
     fn test_gf_poly_div() {
         // Create the dividend (q) as a GfPoly
         let mut q = GfPoly(vec![
-            GfVal(0x5e), GfVal(0x60), GfVal(0x8c), GfVal(0x3d), GfVal(0xc6), GfVal(0x8e),
-            GfVal(0x7e), GfVal(0xa5), GfVal(0x2c), GfVal(0xa4), GfVal(0x04), GfVal(0x8a),
-            GfVal(0x2b), GfVal(0xc2), GfVal(0x36), GfVal(0x0f), GfVal(0xfc), GfVal(0x3f),
-            GfVal(0x09), GfVal(0x00), GfVal(0x00), GfVal(0x00), GfVal(0x00), GfVal(0x00),
-            GfVal(0x00), GfVal(0x00), GfVal(0x00), GfVal(0x00), GfVal(0x00), GfVal(0x00),
+            GfVal(0x5e),
+            GfVal(0x60),
+            GfVal(0x8c),
+            GfVal(0x3d),
+            GfVal(0xc6),
+            GfVal(0x8e),
+            GfVal(0x7e),
+            GfVal(0xa5),
+            GfVal(0x2c),
+            GfVal(0xa4),
+            GfVal(0x04),
+            GfVal(0x8a),
+            GfVal(0x2b),
+            GfVal(0xc2),
+            GfVal(0x36),
+            GfVal(0x0f),
+            GfVal(0xfc),
+            GfVal(0x3f),
+            GfVal(0x09),
+            GfVal(0x00),
+            GfVal(0x00),
+            GfVal(0x00),
+            GfVal(0x00),
+            GfVal(0x00),
+            GfVal(0x00),
+            GfVal(0x00),
+            GfVal(0x00),
+            GfVal(0x00),
+            GfVal(0x00),
+            GfVal(0x00),
         ]);
 
         // Create the divisor (e) as a GfPoly
         let e = GfPoly(vec![
-            GfVal(0x01), GfVal(0x00), GfVal(0x00), GfVal(0x00), GfVal(0x00), GfVal(0x00),
-            GfVal(0x00), GfVal(0x00), GfVal(0x00), GfVal(0x00), GfVal(0x00),
+            GfVal(0x01),
+            GfVal(0x00),
+            GfVal(0x00),
+            GfVal(0x00),
+            GfVal(0x00),
+            GfVal(0x00),
+            GfVal(0x00),
+            GfVal(0x00),
+            GfVal(0x00),
+            GfVal(0x00),
+            GfVal(0x00),
         ]);
 
         // Perform division
         let result = q.div(e);
 
         // Check for errors
-        assert!(result.is_ok(), "Expected successful division, but got an error");
+        assert!(
+            result.is_ok(),
+            "Expected successful division, but got an error"
+        );
     }
 }
