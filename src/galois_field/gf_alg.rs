@@ -309,6 +309,111 @@ impl GfMat {
 
         addmul(rj.unsafe_bytes_mut(), ri.unsafe_bytes(), val.0);
     }
+
+    pub fn invert_with(&mut self, a: &mut GfMat) -> Result<(), &'static str> {
+        for i in 0..self.r {
+            let mut p_row = i;
+            let mut p_val = self.get(i, i);
+
+            for j in (i + 1)..self.r {
+                if p_val.is_zero() {
+                    p_row = j;
+                    p_val = self.get(j, i);
+                }
+            }
+
+            if p_val.is_zero() {
+                continue; // If the pivot value is zero, skip to the next iteration
+            }
+
+            if p_row != i {
+                self.swap_row(i, p_row);
+                a.swap_row(i, p_row);
+            }
+
+            let inv = p_val.inv().map_err(|_| "Inverse calculation failed")?;
+            self.scale_row(i, inv);
+            a.scale_row(i, inv);
+
+            for j in (i + 1)..self.r {
+                let leading = self.get(j, i);
+                self.addmul_row(i, j, leading);
+                a.addmul_row(i, j, leading);
+            }
+        }
+
+        for i in (1..self.r).rev() {
+            for j in (0..i).rev() {
+                let trailing = self.get(j, i);
+                self.addmul_row(i, j, trailing);
+                a.addmul_row(i, j, trailing);
+            }
+        }
+
+        Ok(())
+    }
+
+    pub fn standardize(&mut self) -> Result<(), &'static str> {
+        for i in 0..self.r {
+            let mut p_row = i;
+            let mut p_val = self.get(i, i);
+
+            for j in (i + 1)..self.r {
+                if p_val.is_zero() {
+                    p_row = j;
+                    p_val = self.get(j, i);
+                }
+            }
+
+            if p_val.is_zero() {
+                continue;
+            }
+
+            if p_row != i {
+                self.swap_row(i, p_row);
+            }
+
+            let inv = p_val.inv().map_err(|_| "Inverse calculation failed")?;
+            self.scale_row(i, inv);
+
+            for j in (i + 1)..self.r {
+                let leading = self.get(j, i);
+                self.addmul_row(i, j, leading);
+            }
+        }
+
+        for i in (1..self.r).rev() {
+            for j in (0..i).rev() {
+                let trailing = self.get(j, i);
+                self.addmul_row(i, j, trailing);
+            }
+        }
+
+        Ok(())
+    }
+
+    pub fn parity(&self) -> GfMat {
+        // Assume m is in standard form already
+        // Form: [I_r | P]
+        // Output will be [-P_transpose | I_(c - r)]
+        // Characteristic 2 means we do not need the negative.
+
+        let mut out = GfMat::matrix_zero(self.c - self.r, self.c);
+
+        // Step 1: Fill in the identity. It starts at column offset r.
+        for i in 0..(self.c - self.r) {
+            out.set(i, i + self.r, GfVal(1));
+        }
+
+        // Step 2: Fill in the transposed P matrix.
+        for i in 0..(self.c - self.r) {
+            for j in 0..self.r {
+                out.set(i, j, self.get(j, i + self.r));
+            }
+        }
+
+        out
+    }
 }
 
 #[cfg(test)]
