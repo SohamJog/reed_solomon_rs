@@ -1,6 +1,6 @@
 use crate::galois_field::tables::{GF_EXP, GF_MUL_TABLE};
 use crate::math::addmul::addmul;
-use crate::math::pivot_searcher::{invert_matrix, create_inverted_vdm};
+use crate::math::pivot_searcher::{create_inverted_vdm, invert_matrix};
 use std::error::Error;
 
 pub struct FEC {
@@ -240,7 +240,8 @@ impl FEC {
                     data: share_data.clone(),
                 });
             } else {
-                m_dec[i * k..i * k + k].copy_from_slice(&enc_matrix[share_id * k..share_id * k + k]);
+                m_dec[i * k..i * k + k]
+                    .copy_from_slice(&enc_matrix[share_id * k..share_id * k + k]);
             }
             sharesv[i] = share_data;
             indexes[i] = share_id;
@@ -263,8 +264,6 @@ impl FEC {
                 });
             }
         }
-
-        
 
         Ok(())
     }
