@@ -392,6 +392,7 @@ impl GfMat {
         Ok(())
     }
 
+    // Not in place
     pub fn parity(&self) -> GfMat {
         // Assume m is in standard form already
         // Form: [I_r | P]
