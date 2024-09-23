@@ -1,6 +1,6 @@
 use crate::{
     fec::fec::{Share, FEC},
-    galois_field::gf_alg::{GfMat, GfVal},
+    galois_field::gf_alg::{GfMat, GfPoly, GfVal, GfVals},
 };
 
 // Berlekamp Welch functions for FEC
@@ -20,7 +20,97 @@ impl FEC {
         Ok(())
     }
 
-    pub fn berlekamp_welch() {}
+    pub fn berlekamp_welch(
+        &self,
+        shares: Vec<Share>,
+        index: usize,
+    ) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+        let k = self.k;
+        let r = shares.len();
+        let e = (r - k) / 2; // deg of E polynomial
+        let q = e + k; // deq of Q polynomial
+
+        if e <= 0 {
+            return Err(("Not enough shares!").into());
+        }
+
+        let interp_base = GfVal(2);
+        let eval_point = |num: usize| -> GfVal {
+            if num == 0 {
+                GfVal(0)
+            } else {
+                interp_base.pow(num - 1)
+            }
+        };
+        let dim = q + e;
+        let mut s = GfMat::matrix_zero(dim, dim); // constraint matrix
+        let mut a = GfMat::matrix_zero(dim, dim); // augmented matrix
+        let mut f = GfVals::gfvals_zero(dim); // constant column
+        let mut u = GfVals::gfvals_zero(dim); // solution column
+
+        for i in 0..dim {
+            let x_i = eval_point(shares[i].number);
+            let r_i = GfVal(shares[i].data[index]);
+
+            f.0[i] = x_i.pow(e).mul(r_i);
+
+            for j in 0..q {
+                s.set(i, j, x_i.pow(j));
+                if i == j {
+                    a.set(i, j, GfVal(1));
+                }
+            }
+
+            for k in 0..e {
+                let j = k + q;
+                s.set(i, j, x_i.pow(k).mul(r_i));
+                if i == j {
+                    a.set(i, j, GfVal(1));
+                }
+            }
+        }
+
+        // invert and put the result in a
+        if s.invert_with(&mut a).is_err() {
+            return Err(("Error inverting matrix").into());
+        }
+
+        // multiply the inverted matrix by the column vector
+        for i in 0..dim {
+            let ri = a.index_row(i);
+            u.0[i] = ri.dot(&f);
+        }
+
+        // reverse u for easier construction of the polynomials
+        let len_u = u.0.len();
+        for i in 0..len_u / 2 {
+            u.0.swap(i, len_u - i - 1);
+        }
+
+        let mut q_poly = GfPoly(u.0[e..].to_vec());
+        let mut e_poly = GfPoly(vec![GfVal(1)]);
+        e_poly.0.extend_from_slice(&u.0[..e]);
+
+        let (p_poly, rem) = match q_poly.div(e_poly) {
+            Ok((p_poly, rem)) => (p_poly, rem),
+            Err(err) => return Err(err.into()),
+        };
+
+        if !rem.is_zero() {
+            return Err(("too many errors to reconstruct").into());
+        }
+
+        let mut out = vec![0u8; self.n];
+        for i in 0..out.len() {
+            let mut pt = GfVal(0);
+            if i != 0 {
+                pt = interp_base.pow(i - 1);
+            }
+            out[i] = p_poly.eval(pt).0;
+        }
+
+        return Ok(out);
+    }
 
     pub fn syndrome_matrix(&self, shares: Vec<Share>) -> Result<GfMat, Box<dyn std::error::Error>> {
         let mut keepers = vec![false; self.n];

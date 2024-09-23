@@ -15,7 +15,7 @@ impl GfVal {
         self.0 as usize
     }
 
-    fn pow(self, val: usize) -> GfVal {
+    pub fn pow(&self, val: usize) -> GfVal {
         let mut out = 1u8;
         let mul_base = &GF_MUL_TABLE[self.gfval_usize()];
         for _ in 0..val {
@@ -24,11 +24,11 @@ impl GfVal {
         GfVal(out)
     }
 
-    fn mul(self, b: GfVal) -> GfVal {
+    pub fn mul(self, b: GfVal) -> GfVal {
         GfVal(GF_MUL_TABLE[self.gfval_usize()][b.gfval_usize()])
     }
 
-    fn div(self, b: GfVal) -> Result<GfVal, &'static str> {
+    pub fn div(self, b: GfVal) -> Result<GfVal, &'static str> {
         if b.0 == 0 {
             return Err("divide by zero");
         }
@@ -40,15 +40,15 @@ impl GfVal {
         ))
     }
 
-    fn add(self, b: GfVal) -> GfVal {
+    pub fn add(self, b: GfVal) -> GfVal {
         GfVal(self.0 ^ b.0)
     }
 
-    fn is_zero(self) -> bool {
+    pub fn is_zero(self) -> bool {
         self.0 == 0
     }
 
-    fn inv(self) -> Result<GfVal, &'static str> {
+    pub fn inv(self) -> Result<GfVal, &'static str> {
         if self.0 == 0 {
             return Err("invert zero");
         }
