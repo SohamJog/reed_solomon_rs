@@ -1,28 +1,98 @@
 use crate::{
     fec::fec::{Share, FEC},
     galois_field::gf_alg::{GfMat, GfPoly, GfVal, GfVals},
+    math::addmul::addmul,
 };
+
+// TODO: Fix error handling as in return the error that the functions return
 
 // Berlekamp Welch functions for FEC
 impl FEC {
-    pub fn decode() {}
+    pub fn decode(
+        &self,
+        mut dst: Vec<u8>,
+        mut shares: Vec<Share>,
+    ) -> Result<(Vec<u8>, Result<(), Box<dyn std::error::Error>>), Box<dyn std::error::Error>> {
+        if self.correct(&mut shares).is_err() {
+            return Err(("Error in correcting").into());
+        }
+        if shares.len() == 0 {
+            return Err(("Must specify at least one share").into());
+        }
+        let piece_len = shares[0].data.len();
+        let result_len = piece_len * self.k;
+        if dst.capacity() < result_len {
+            dst = vec![0u8; result_len];
+        } else {
+            dst.resize(result_len, 0);
+        }
+        return Ok((
+            dst.clone(),
+            self.rebuild(shares, |s: Share| {
+                dst[s.number * piece_len..(s.number + 1) * piece_len].copy_from_slice(&s.data);
+            }),
+        ));
+    }
 
-    pub fn decode_no_concat() {}
+    pub fn decode_no_concat<F>(
+        &self,
+        mut shares: Vec<Share>,
+        output: F,
+    ) -> Result<(), Box<dyn std::error::Error>>
+    where
+        F: FnMut(Share),
+    {
+        if self.correct(&mut shares).is_err() {
+            return Err(("Error in correcting").into());
+        }
+        return self.rebuild(shares, output);
+    }
 
-    pub fn correct(&self, mut shares: Vec<Share>) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn correct(&self, shares: &mut Vec<Share>) -> Result<(), Box<dyn std::error::Error>> {
         if shares.len() < self.k {
             return Err(format!("Must specify at least the number of required shares").into());
         }
         shares.sort();
 
-        // Syndrome matrix stuff
+        // fast path: check to see if there are no errors by evaluating it with the syndrome matrix
+        let synd = match self.syndrome_matrix(&shares) {
+            Ok(synd) => synd,
+            Err(err) => return Err(err.into()),
+        };
+
+        let mut buf = vec![0u8; shares[0].data.len()];
+        for i in 0..synd.r {
+            for j in 0..buf.len() {
+                buf[j] = 0;
+            }
+            for j in 0..synd.c {
+                addmul(
+                    buf.as_mut_slice(),
+                    shares[j].data.as_slice(),
+                    synd.get(i, j).0,
+                );
+            }
+
+            for j in 0..buf.len() {
+                if buf[j] == 0 {
+                    continue;
+                }
+                let data = match self.berlekamp_welch(&shares, j) {
+                    Ok(data) => data,
+                    Err(err) => return Err(err.into()),
+                };
+                for i in 0..shares.len() {
+                    shares[i].data[j] = data[shares[i].number];
+                }
+            }
+        }
 
         Ok(())
     }
 
     pub fn berlekamp_welch(
         &self,
-        shares: Vec<Share>,
+        shares: &Vec<Share>,
         index: usize,
     ) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
         let k = self.k;
@@ -112,17 +182,20 @@ impl FEC {
         return Ok(out);
     }
 
-    pub fn syndrome_matrix(&self, shares: Vec<Share>) -> Result<GfMat, Box<dyn std::error::Error>> {
+    pub fn syndrome_matrix(
+        &self,
+        shares: &Vec<Share>,
+    ) -> Result<GfMat, Box<dyn std::error::Error>> {
         let mut keepers = vec![false; self.n];
         let mut share_count = 0;
-        for share in &shares {
+        for share in shares {
             if !keepers[share.number as usize] {
                 keepers[share.number as usize] = true;
                 share_count += 1;
             }
         }
-        // create a vandermonde matrix but skip columns where we're missing the share
 
+        // create a vandermonde matrix but skip columns where we're missing the share
         let mut out = GfMat::matrix_zero(self.k, share_count);
         for i in 0..self.k {
             let mut skipped = 0;

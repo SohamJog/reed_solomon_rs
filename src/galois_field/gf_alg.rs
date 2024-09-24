@@ -228,9 +228,9 @@ impl GfPoly {
 }
 
 pub struct GfMat {
-    r: usize,
-    c: usize,
-    d: GfVals,
+    pub r: usize,
+    pub c: usize,
+    pub d: GfVals,
 }
 
 impl GfMat {
