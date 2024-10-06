@@ -31,6 +31,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         };
         f.encode(&data, output)?;
     }
+    // TODO: check out why this is different from the infectious encoding for the same string
     for i in 0..total {
         println!("Share {}: {:?}", i, shares[i]);
     }
