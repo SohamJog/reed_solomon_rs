@@ -13,9 +13,8 @@ impl FEC {
         mut dst: Vec<u8>,
         mut shares: Vec<Share>,
     ) -> Result<(Vec<u8>, Result<(), Box<dyn std::error::Error>>), Box<dyn std::error::Error>> {
-        if self.correct(&mut shares).is_err() {
-            return Err(("Error in correcting").into());
-        }
+        self.correct(&mut shares)?;
+         
         if shares.len() == 0 {
             return Err(("Must specify at least one share").into());
         }
@@ -42,9 +41,8 @@ impl FEC {
     where
         F: FnMut(Share),
     {
-        if self.correct(&mut shares).is_err() {
-            return Err(("Error in correcting").into());
-        }
+        self.correct(&mut shares)?;
+        
         return self.rebuild(shares, output);
     }
 

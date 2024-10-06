@@ -10,9 +10,21 @@ pub struct FEC {
     pub vand_matrix: Vec<u8>,
 }
 
+// Number is the x coordinate
+// Data is the y coordinate
+#[derive(Debug)]
 pub struct Share {
     pub number: usize,
     pub data: Vec<u8>,
+}
+
+impl Clone for Share {
+    fn clone(&self) -> Share {
+        Share {
+            number: self.number,
+            data: self.data.clone(),  // Deep copy of Vec<u8>
+        }
+    }
 }
 
 impl PartialEq for Share {

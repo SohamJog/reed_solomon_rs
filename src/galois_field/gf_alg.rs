@@ -97,6 +97,8 @@ impl GfVals {
 }
 
 #[derive(Clone)]
+#[derive(Debug)]
+
 pub struct GfPoly(pub Vec<GfVal>);
 
 impl GfPoly {
@@ -179,14 +181,15 @@ impl GfPoly {
         out
     }
 
-    pub fn div(&mut self, mut b: GfPoly) -> Result<(GfPoly, GfPoly), &'static str> {
+    pub fn div(&mut self, mut b: GfPoly) -> Result<(GfPoly, GfPoly), Box<dyn std::error::Error>> {
         // Sanitize the divisor by removing leading zeros
+        println!("Dividing {:?} by {:?}", self, b);
         let mut q = GfPoly::poly_zero(0);
         while !b.0.is_empty() && b.0[0].is_zero() {
             b.0.remove(0);
         }
         if b.0.is_empty() {
-            return Err("divide by zero");
+            return Err("divide by zero".into());
         }
 
         // Sanitize the base poly as well
@@ -203,7 +206,7 @@ impl GfPoly {
             let coef = match leading_p.div(leading_b) {
                 Ok(coef) => coef,
                 Err(e) => {
-                    return Err(e);
+                    return Err(e.into());
                 }
             };
             let new_vec = vec![coef];
@@ -214,7 +217,7 @@ impl GfPoly {
             let padded = GfPoly([scaled.0, padding.0].concat()); // No need for `&` here
             *self = self.add(&padded);
             if !self.0[0].is_zero() {
-                return Err("Alg Error");
+                return Err(format!("Alg error: {:?}", self).into());
             }
             self.0.drain(..1);
         }
