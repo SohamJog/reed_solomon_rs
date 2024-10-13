@@ -124,7 +124,7 @@ pub fn invert_matrix(matrix: &mut [u8], k: usize) -> Result<(), &'static str> {
 }
 
 pub fn create_inverted_vdm(vdm: &mut [u8], k: usize) {
-    println!("vdm: {:?}, k: {:?}", vdm, k);
+
     if k == 1 {
         vdm[0] = 1;
         return;
@@ -157,16 +157,10 @@ pub fn create_inverted_vdm(vdm: &mut [u8], k: usize) {
             t = (b[i] ^ (mul_p_row[t as usize]) as usize) as u8;
         }
 
-        println!("row: {:?}, b: {:?}", row, b);
-
-
         let mul_t_inv = &GF_MUL_TABLE[GF_INVERSE[t as usize] as usize];
         for col in 0..k {
             vdm[col * k + row] = mul_t_inv[b[col]];
         }
-
-        println!("row: {:?}, vdm: {:?}\n", row, vdm);
-
 
     }
 }

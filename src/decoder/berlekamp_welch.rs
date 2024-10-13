@@ -12,12 +12,18 @@ impl FEC {
         &self,
         mut dst: Vec<u8>,
         mut shares: Vec<Share>,
-    ) -> Result<(Vec<u8>, Result<(), Box<dyn std::error::Error>>), Box<dyn std::error::Error>> {
+    ) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+        // DEBUG
+        println!("Decode called with dst: {:?}, shares: {:?}", dst, shares);
+
         self.correct(&mut shares)?;
-         
+
+        println!("Shares after correcting: {:?}", shares);
+
         if shares.len() == 0 {
             return Err(("Must specify at least one share").into());
         }
+
         let piece_len = shares[0].data.len();
         let result_len = piece_len * self.k;
         if dst.capacity() < result_len {
@@ -25,12 +31,10 @@ impl FEC {
         } else {
             dst.resize(result_len, 0);
         }
-        return Ok((
-            dst.clone(),
-            self.rebuild(shares, |s: Share| {
-                dst[s.number * piece_len..(s.number + 1) * piece_len].copy_from_slice(&s.data);
-            }),
-        ));
+        self.rebuild(shares, |s: Share| {
+            dst[s.number * piece_len..(s.number + 1) * piece_len].copy_from_slice(&s.data);
+        })?;
+        return Ok(dst);
     }
 
     pub fn decode_no_concat<F>(
@@ -42,7 +46,7 @@ impl FEC {
         F: FnMut(Share),
     {
         self.correct(&mut shares)?;
-        
+
         return self.rebuild(shares, output);
     }
 
@@ -52,11 +56,19 @@ impl FEC {
         }
         shares.sort();
 
+        // DEBUG
+        println!();
+        println!("Post sort shares: {:?}", shares);
+
         // fast path: check to see if there are no errors by evaluating it with the syndrome matrix
         let synd = match self.syndrome_matrix(&shares) {
             Ok(synd) => synd,
             Err(err) => return Err(err.into()),
         };
+
+        // DEBUG
+        println!();
+        println!("Syndrome matrix: {:?}", synd);
 
         let mut buf = vec![0u8; shares[0].data.len()];
         for i in 0..synd.r {
@@ -84,7 +96,6 @@ impl FEC {
                 }
             }
         }
-
         Ok(())
     }
 
@@ -200,15 +211,19 @@ impl FEC {
             for j in 0..self.n {
                 if !keepers[j] {
                     skipped = skipped + 1;
+                    continue;
                 }
+
                 out.set(i, j - skipped, GfVal(self.vand_matrix[i * self.n + j]));
             }
         }
+        print!("Standardizing now...\n");
 
         if out.standardize().is_err() {
             return Err(("Matrix standardizing failed").into());
         }
+        print!("Returning now...\n");
 
-        return Ok(out);
+        return Ok(out.parity());
     }
 }

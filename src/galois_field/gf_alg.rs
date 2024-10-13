@@ -1,5 +1,5 @@
 use crate::galois_field::tables::{GF_EXP, GF_LOG, GF_MUL_TABLE};
-use crate::math::addmul::addmul;
+use crate::math::addmul::addmul_gfval;
 use std::fmt;
 
 #[derive(Copy, Clone, Debug)]
@@ -56,6 +56,7 @@ impl GfVal {
     }
 }
 
+#[derive(Debug)]
 pub struct GfVals(pub Vec<GfVal>);
 
 impl GfVals {
@@ -96,8 +97,7 @@ impl GfVals {
     }
 }
 
-#[derive(Clone)]
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 
 pub struct GfPoly(pub Vec<GfVal>);
 
@@ -230,6 +230,7 @@ impl GfPoly {
     }
 }
 
+#[derive(Debug)]
 pub struct GfMat {
     pub r: usize,
     pub c: usize,
@@ -264,10 +265,20 @@ impl GfMat {
     }
 
     pub fn get(&self, i: usize, j: usize) -> GfVal {
+        // println!(
+        //     "Get called at {:?}, {:?}, returning a value of {:?}",
+        //     i,
+        //     j,
+        //     self.d.0[self.index(i, j)]
+        // );
         self.d.0[self.index(i, j)]
     }
 
     pub fn set(&mut self, i: usize, j: usize, val: GfVal) {
+        println!(
+            "\nSet called with i {:?}, j {:?}, and val: {:?}",
+            i, j, val.0
+        );
         let index = self.index(i, j);
         self.d.0[index] = val; // This is fine; the mutable borrow is used here.
     }
@@ -307,10 +318,12 @@ impl GfMat {
     }
 
     pub fn addmul_row(&mut self, i: usize, j: usize, val: GfVal) {
+        println!("Addmulrow with {:?}, {:?}, {:?}", i, j, val.0);
         let ri = self.index_row(i);
-        let mut rj = self.index_row(j);
+        let rj = self.index_row_mut(j);
 
-        addmul(rj.unsafe_bytes_mut(), ri.unsafe_bytes(), val.0);
+        // TODO Make a vector form of addmul here so that we can actually mutate self
+        addmul_gfval(rj, &ri.0, val);
     }
 
     pub fn invert_with(&mut self, a: &mut GfMat) -> Result<(), &'static str> {
@@ -365,24 +378,35 @@ impl GfMat {
                 if p_val.is_zero() {
                     p_row = j;
                     p_val = self.get(j, i);
+                } else {
+                    break;
                 }
             }
 
             if p_val.is_zero() {
+                // DEBUG
+                println!("P val is zero!");
                 continue;
             }
 
             if p_row != i {
+                // DEBUG HERE
                 self.swap_row(i, p_row);
             }
 
+            // DEBUG HERE
             let inv = p_val.inv().map_err(|_| "Inverse calculation failed")?;
+            print!("inv: {:?}\n", inv);
             self.scale_row(i, inv);
+
+            println!("Post scaling: {:?}", self);
 
             for j in (i + 1)..self.r {
                 let leading = self.get(j, i);
                 self.addmul_row(i, j, leading);
             }
+            println!("Post addmul_row: {:?}", self);
+
         }
 
         for i in (1..self.r).rev() {
