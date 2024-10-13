@@ -3,6 +3,7 @@ use crate::math::addmul::addmul;
 use crate::math::pivot_searcher::{create_inverted_vdm, invert_matrix};
 use std::error::Error;
 
+#[derive(Debug)]
 pub struct FEC {
     pub k: usize,
     pub n: usize,
@@ -57,6 +58,8 @@ impl FEC {
         let mut temp_matrix = vec![0u8; n * k];
         create_inverted_vdm(&mut temp_matrix, k);
 
+        print!("inverted vdm temp matrix: {:?}", temp_matrix);
+
         for i in k * k..temp_matrix.len() {
             temp_matrix[i] = GF_EXP[((i / k) * (i % k)) % 255];
         }
@@ -65,12 +68,16 @@ impl FEC {
             enc_matrix[i * (k + 1)] = 1;
         }
 
+        print!("temp matrix: {:?}", temp_matrix);
         for row in (k * k..n * k).step_by(k) {
             for col in 0..k {
+                println!("row: {:?}, col: {:?}", row, col);
                 let pa = &temp_matrix[row..];
                 let pb = &temp_matrix[col..];
                 let mut acc = 0u8;
                 for (_i, (pa, pb)) in pa.iter().zip(pb.iter().step_by(k)).enumerate().take(k) {
+                    println!("acc: {:?}, pa: {:?}, pb: {:?}", acc, *pa as usize, *pb as usize);
+                    println!("gf mul table at index: {:?}", GF_MUL_TABLE[*pa as usize][*pb as usize]);
                     acc ^= GF_MUL_TABLE[*pa as usize][*pb as usize];
                 }
                 enc_matrix[row + col] = acc;

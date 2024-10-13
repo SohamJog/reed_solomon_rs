@@ -124,6 +124,7 @@ pub fn invert_matrix(matrix: &mut [u8], k: usize) -> Result<(), &'static str> {
 }
 
 pub fn create_inverted_vdm(vdm: &mut [u8], k: usize) {
+    println!("vdm: {:?}, k: {:?}", vdm, k);
     if k == 1 {
         vdm[0] = 1;
         return;
@@ -138,6 +139,8 @@ pub fn create_inverted_vdm(vdm: &mut [u8], k: usize) {
         }
         c[k - 1] ^= GF_EXP[i] as usize;
     }
+
+    // Everything is fine till now
 
     for row in 0..k {
         let mut index = 0;
@@ -154,10 +157,17 @@ pub fn create_inverted_vdm(vdm: &mut [u8], k: usize) {
             t = (b[i] ^ (mul_p_row[t as usize]) as usize) as u8;
         }
 
-        let mul_t_inv = &GF_MUL_TABLE[GF_INVERSE[index] as usize];
+        println!("row: {:?}, b: {:?}", row, b);
+
+
+        let mul_t_inv = &GF_MUL_TABLE[GF_INVERSE[t as usize] as usize];
         for col in 0..k {
             vdm[col * k + row] = mul_t_inv[b[col]];
         }
+
+        println!("row: {:?}, vdm: {:?}\n", row, vdm);
+
+
     }
 }
 

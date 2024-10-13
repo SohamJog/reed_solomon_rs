@@ -9,6 +9,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // This is a *FEC which required 'required' pieces for reconstruction at minimum
     // and generate 'total' total pieces
     let f = FEC::new(required, total)?;
+    println!("New FEC: {:?}", f);
 
     let mut shares: Vec<Share> = vec![
         Share {

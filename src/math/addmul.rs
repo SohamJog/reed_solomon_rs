@@ -1,6 +1,9 @@
 use crate::galois_field::tables::GF_MUL_TABLE;
 
 pub fn addmul(z: &mut [u8], x: &[u8], y: u8) {
+
+    println!("Called addmul z: {:?}, x: {:?}, y: {:?}", z, x, y);
+
     if y == 0 {
         return;
     }
