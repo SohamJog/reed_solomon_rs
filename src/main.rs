@@ -36,12 +36,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("Share {}: {:?}", i, shares[i]);
     }
 
-    // TODO corrupt the data maybe
+    // Corrupting the data
+    shares[2].data[1] = b'!';
 
     let data = f.decode([].to_vec(), shares)?;
 
     for i in 0..data.len() {
-      println!("Share {}: {:?}", i, data[i]);
+        println!("Share {}: {:?}", i, data[i]);
     }
     Ok(())
 }
