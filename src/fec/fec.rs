@@ -23,7 +23,7 @@ impl Clone for Share {
     fn clone(&self) -> Share {
         Share {
             number: self.number,
-            data: self.data.clone(),  // Deep copy of Vec<u8>
+            data: self.data.clone(), // Deep copy of Vec<u8>
         }
     }
 }
@@ -68,7 +68,6 @@ impl FEC {
 
         for row in (k * k..n * k).step_by(k) {
             for col in 0..k {
-
                 let pa = &temp_matrix[row..];
                 let pb = &temp_matrix[col..];
                 let mut acc = 0u8;
@@ -211,7 +210,7 @@ impl FEC {
     ) -> Result<(), Box<dyn std::error::Error>>
     where
         F: FnMut(Share),
-    {   
+    {
         println!("Rebuild called with shares: {:?}", shares);
         let size = shares.len();
         let k = self.k;
@@ -250,6 +249,7 @@ impl FEC {
             }
             if share_id < k {
                 m_dec[i * (k + 1)] = 1;
+                println!("Number: {:?}, Data: {:?}", share_id, share_data);
                 output(Share {
                     number: share_id,
                     data: share_data.clone(),
@@ -275,13 +275,17 @@ impl FEC {
         for i in 0..indexes.len() {
             if indexes[i] >= k {
                 buf.fill(0);
-            }
-            for col in 0..k {
-                addmul(&mut buf, &sharesv[col], m_dec[i * k + col]);
-                output(Share {
-                    number: i,
-                    data: buf.clone(),
-                });
+
+                for col in 0..k {
+                    addmul(&mut buf, &sharesv[col], m_dec[i * k + col]);
+
+                    println!("Number: {:?}, Data: {:?}", i, buf);
+
+                    output(Share {
+                        number: i,
+                        data: buf.clone(),
+                    });
+                }
             }
         }
 
