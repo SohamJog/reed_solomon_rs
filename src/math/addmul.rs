@@ -2,8 +2,6 @@ use crate::galois_field::{gf_alg::GfVal, tables::GF_MUL_TABLE};
 
 pub fn addmul(z: &mut [u8], x: &[u8], y: u8) {
 
-    // println!("Called addmul z: {:?}, x: {:?}, y: {:?}", z, x, y);
-
     if y == 0 {
         return;
     }

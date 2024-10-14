@@ -37,7 +37,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // Corrupting the data
-     shares[2].data[1] = b'!';
+     shares[2].data[1] = b'?';
 
     let data = f.decode([].to_vec(), shares)?;
 

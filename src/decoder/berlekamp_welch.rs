@@ -13,12 +13,7 @@ impl FEC {
         mut dst: Vec<u8>,
         mut shares: Vec<Share>,
     ) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
-        // DEBUG
-        println!("Decode called with dst: {:?}, shares: {:?}", dst, shares);
-
         self.correct(&mut shares)?;
-
-        println!("Shares after correcting: {:?}", shares);
 
         if shares.len() == 0 {
             return Err(("Must specify at least one share").into());
@@ -51,25 +46,17 @@ impl FEC {
     }
 
     pub fn correct(&self, shares: &mut Vec<Share>) -> Result<(), Box<dyn std::error::Error>> {
-        println!("Correct called with {:?}", shares);
+
         if shares.len() < self.k {
             return Err(format!("Must specify at least the number of required shares").into());
         }
         shares.sort();
-
-        // DEBUG
-        println!();
-        println!("Post sort shares: {:?}", shares);
 
         // fast path: check to see if there are no errors by evaluating it with the syndrome matrix
         let synd = match self.syndrome_matrix(&shares) {
             Ok(synd) => synd,
             Err(err) => return Err(err.into()),
         };
-
-        // DEBUG
-        println!();
-        println!("Syndrome matrix: {:?}", synd);
 
         let mut buf = vec![0u8; shares[0].data.len()];
         for i in 0..synd.r {
@@ -105,10 +92,7 @@ impl FEC {
         shares: &Vec<Share>,
         index: usize,
     ) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
-        println!(
-            "Berlekamp Welch called with shares {:?}, index: {:?}",
-            shares, index
-        );
+     
         let k = self.k;
         let r = shares.len();
         let e = (r - k) / 2; // deg of E polynomial
@@ -222,12 +206,10 @@ impl FEC {
                 out.set(i, j - skipped, GfVal(self.vand_matrix[i * self.n + j]));
             }
         }
-        print!("Standardizing now...\n");
 
         if out.standardize().is_err() {
             return Err(("Matrix standardizing failed").into());
         }
-        print!("Returning now...\n");
 
         return Ok(out.parity());
     }

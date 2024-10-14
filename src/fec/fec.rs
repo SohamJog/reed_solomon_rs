@@ -211,7 +211,6 @@ impl FEC {
     where
         F: FnMut(Share),
     {
-        println!("Rebuild called with shares: {:?}", shares);
         let size = shares.len();
         let k = self.k;
         let n = self.n;
@@ -249,7 +248,6 @@ impl FEC {
             }
             if share_id < k {
                 m_dec[i * (k + 1)] = 1;
-                println!("Number: {:?}, Data: {:?}", share_id, share_data);
                 output(Share {
                     number: share_id,
                     data: share_data.clone(),
@@ -262,13 +260,9 @@ impl FEC {
             indexes[i] = share_id;
         }
 
-        println!("BEFORE INVERT m_dec = {:?}", m_dec);
-
         if invert_matrix(&mut m_dec, k).is_err() {
             return Err(("Matrix inversion failed").into());
         }
-
-        println!("m_dec = {:?}", m_dec);
 
         let mut buf = vec![0u8; share_size];
 
@@ -278,8 +272,6 @@ impl FEC {
 
                 for col in 0..k {
                     addmul(&mut buf, &sharesv[col], m_dec[i * k + col]);
-
-                    println!("Number: {:?}, Data: {:?}", i, buf);
 
                     output(Share {
                         number: i,
