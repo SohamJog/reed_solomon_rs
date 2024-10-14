@@ -2,7 +2,6 @@ use crate::fec::fec::*;
 use reed_solomon_rs::*;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Define the total number of shares and create a buffer to store them.
     let required = 4;
     let total = 8;
 
@@ -42,6 +41,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             shares[i].data[j] = b'?'
         }
      }
+     shares[0].data[0] = b'?';
+
+
+
+
+
+
 
     let data = f.decode([].to_vec(), shares)?;
 
