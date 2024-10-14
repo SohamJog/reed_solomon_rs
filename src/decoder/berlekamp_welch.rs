@@ -51,6 +51,7 @@ impl FEC {
     }
 
     pub fn correct(&self, shares: &mut Vec<Share>) -> Result<(), Box<dyn std::error::Error>> {
+        println!("Correct called with {:?}", shares);
         if shares.len() < self.k {
             return Err(format!("Must specify at least the number of required shares").into());
         }
@@ -104,6 +105,10 @@ impl FEC {
         shares: &Vec<Share>,
         index: usize,
     ) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+        println!(
+            "Berlekamp Welch called with shares {:?}, index: {:?}",
+            shares, index
+        );
         let k = self.k;
         let r = shares.len();
         let e = (r - k) / 2; // deg of E polynomial

@@ -101,6 +101,14 @@ impl GfVals {
 
 pub struct GfPoly(pub Vec<GfVal>);
 
+impl fmt::Display for GfPoly {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let values: Vec<u8> = self.0.iter().map(|val| val.0).collect();
+        write!(f, "{:?}", values)
+    }
+}
+
+
 impl GfPoly {
     pub fn poly_zero(size: usize) -> GfPoly {
         let out = vec![GfVal(0); size];
@@ -156,19 +164,22 @@ impl GfPoly {
     }
 
     pub fn add(&self, b: &GfPoly) -> GfPoly {
+        println!("Add called with self {} and b {}", self, b);
         let mut size = self.0.len();
         if b.0.len() > size {
             size = b.0.len();
         }
-        let mut out = vec![GfVal(0); size];
+        let mut out = GfPoly(vec![GfVal(0); size]);
 
         for i in 0..size {
             let pi = self.index(i as i32);
             let bi = b.index(i as i32);
-            out[i] = pi.add(bi);
+            println!("i {:?}, pi {:?}, pi {:?}", i, pi, bi);
+            out.set(i, pi.add(bi));
+            println!("Out: {:?}", out)
         }
 
-        GfPoly(out)
+        out
     }
 
     pub fn eval(&self, x: GfVal) -> GfVal {
@@ -183,7 +194,7 @@ impl GfPoly {
 
     pub fn div(&mut self, mut b: GfPoly) -> Result<(GfPoly, GfPoly), Box<dyn std::error::Error>> {
         // Sanitize the divisor by removing leading zeros
-        println!("Dividing {:?} by {:?}", self, b);
+        println!("Dividing {} by {}", self, b);
         let mut q = GfPoly::poly_zero(0);
         while !b.0.is_empty() && b.0[0].is_zero() {
             b.0.remove(0);
@@ -200,7 +211,13 @@ impl GfPoly {
             return Ok((GfPoly::poly_zero(1), GfPoly::poly_zero(1)));
         }
 
+        // DEBUG
+        println!("Dividing {} by {}", self, b);
+
+
         while b.deg() <= self.deg() {
+            println!("Dividing {} by {}", self, b);
+
             let leading_p = self.index(self.deg() as i32);
             let leading_b = b.index(b.deg() as i32);
             let coef = match leading_p.div(leading_b) {
@@ -215,9 +232,10 @@ impl GfPoly {
             let scaled = b.scale(coef);
             let padding = GfPoly(vec![GfVal(0); self.deg() - scaled.deg()]); // Create a zero polynomial for padding
             let padded = GfPoly([scaled.0, padding.0].concat()); // No need for `&` here
+            println!("Self: {}", self);
             *self = self.add(&padded);
             if !self.0[0].is_zero() {
-                return Err(format!("Alg error: {:?}", self).into());
+                return Err(format!("Alg error: {}", self).into());
             }
             self.0.drain(..1);
         }
@@ -275,10 +293,6 @@ impl GfMat {
     }
 
     pub fn set(&mut self, i: usize, j: usize, val: GfVal) {
-        println!(
-            "\nSet called with i {:?}, j {:?}, and val: {:?}",
-            i, j, val.0
-        );
         let index = self.index(i, j);
         self.d.0[index] = val; // This is fine; the mutable borrow is used here.
     }
@@ -318,7 +332,7 @@ impl GfMat {
     }
 
     pub fn addmul_row(&mut self, i: usize, j: usize, val: GfVal) {
-        println!("Addmulrow with {:?}, {:?}, {:?}", i, j, val.0);
+        // println!("Addmulrow with {:?}, {:?}, {:?}", i, j, val.0);
         let ri = self.index_row(i);
         let rj = self.index_row_mut(j);
 
@@ -396,17 +410,14 @@ impl GfMat {
 
             // DEBUG HERE
             let inv = p_val.inv().map_err(|_| "Inverse calculation failed")?;
-            print!("inv: {:?}\n", inv);
+
             self.scale_row(i, inv);
 
-            println!("Post scaling: {:?}", self);
 
             for j in (i + 1)..self.r {
                 let leading = self.get(j, i);
                 self.addmul_row(i, j, leading);
             }
-            println!("Post addmul_row: {:?}", self);
-
         }
 
         for i in (1..self.r).rev() {

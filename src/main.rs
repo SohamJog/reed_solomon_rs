@@ -37,12 +37,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // Corrupting the data
-    shares[2].data[1] = b'!';
+     shares[2].data[1] = b'!';
 
     let data = f.decode([].to_vec(), shares)?;
 
     for i in 0..data.len() {
         println!("Share {}: {:?}", i, data[i]);
+    }
+    match String::from_utf8(data) {
+        Ok(s) => println!("got: {:?}", s),
+        Err(e) => println!("Invalid UTF-8 sequence: {}", e),
     }
     Ok(())
 }
