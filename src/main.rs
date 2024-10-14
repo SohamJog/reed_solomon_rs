@@ -31,13 +31,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         };
         f.encode(&data, output)?;
     }
-    // TODO: check out why this is different from the infectious encoding for the same string
+    
     for i in 0..total {
         println!("Share {}: {:?}", i, shares[i]);
     }
 
     // Corrupting the data
-     shares[2].data[1] = b'?';
+     for i in 1..3 {
+        for j in 1..3 {
+            shares[i].data[j] = b'?'
+        }
+     }
 
     let data = f.decode([].to_vec(), shares)?;
 

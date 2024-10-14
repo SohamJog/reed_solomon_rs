@@ -4,8 +4,6 @@ use crate::{
     math::addmul::addmul,
 };
 
-// TODO: Fix error handling as in return the error that the functions return
-
 // Berlekamp Welch functions for FEC
 impl FEC {
     pub fn decode(
