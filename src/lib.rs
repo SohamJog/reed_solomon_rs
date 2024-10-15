@@ -1,23 +1,23 @@
+/// Contains math functions for GF(256).
 pub mod galois_field {
     pub mod gf_alg;
     pub mod tables;
 }
 
+/// Contains auxiliary math functions.
 pub mod math {
     pub mod addmul;
     pub mod pivot_searcher;
 }
 
+/// Contains FEC(Forward Error Correction) implementations.
 pub mod fec {
     pub mod fec;
 }
 
+/// Contains the Berlekamp Welch Decoder and auxiliary functions
 pub mod decoder {
     pub mod berlekamp_welch;
-}
-
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
 }
 
 #[cfg(test)]

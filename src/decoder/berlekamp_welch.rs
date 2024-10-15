@@ -6,6 +6,20 @@ use crate::{
 
 // Berlekamp Welch functions for FEC
 impl FEC {
+    /// decode() will take a destination buffer (can be empty) and a list of shares
+    /// (pieces). It will return the data passed in to the corresponding Encode
+    /// call or return an error.
+    ///
+    /// It will first correct the shares using correct(), mutating and reordering the
+    /// passed-in shares arguments. Then it will rebuild the data using rebuild().
+    /// Finally it will concatenate the data into the given output buffer dst if it
+    /// has capacity, growing it otherwise.
+    ///
+    /// If you already know your data does not contain errors, rebuild() will be
+    /// faster.
+    ///
+    /// If you only want to identify which pieces are bad, you may be interested in
+    /// correct().
     pub fn decode(
         &self,
         mut dst: Vec<u8>,
@@ -30,6 +44,8 @@ impl FEC {
         return Ok(dst);
     }
 
+    /// If you don't want the data concatenated for you, you can use correct() and
+    /// then rebuild() individually.
     pub fn decode_no_concat<F>(
         &self,
         mut shares: Vec<Share>,
@@ -43,6 +59,9 @@ impl FEC {
         return self.rebuild(shares, output);
     }
 
+    /// correct() implements the Berlekamp-Welch algorithm for correcting
+    /// errors in given FEC encoded data. It will correct the supplied shares,
+    /// mutating the underlying byte slices and reordering the shares
     pub fn correct(&self, shares: &mut Vec<Share>) -> Result<(), Box<dyn std::error::Error>> {
 
         if shares.len() < self.k {
