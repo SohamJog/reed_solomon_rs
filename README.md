@@ -13,7 +13,7 @@ reed_solomon = { git = "https://github.com/SohamJog/reed_solomon_rs" }
 
 # Example
 
-```
+```rust
 use reed_solomon_rs::fec::fec::*;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
