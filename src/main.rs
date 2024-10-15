@@ -36,17 +36,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // Corrupting the data
-     for i in 1..3 {
-        for j in 1..3 {
-            shares[i].data[j] = b'?'
-        }
-     }
+    //  for i in 1..3 {
+    //     for j in 1..3 {
+    //         shares[i].data[j] = b'?'
+    //     }
+    //  }
      shares[0].data[0] = b'?';
-
-
-
-
-
+    //  shares[0].data[1] = b'?';
+    //  shares[0].data[2] = b'?';
+    //  shares[0].data[3] = b'?';
+     shares[1].data[1] = b'?';
 
 
     let data = f.decode([].to_vec(), shares)?;

@@ -1,5 +1,3 @@
-use crate::fec::fec::*;
-
 pub mod galois_field {
     pub mod gf_alg;
     pub mod tables;
@@ -24,13 +22,7 @@ pub fn add(left: u64, right: u64) -> u64 {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
+    use crate::fec::fec::*;
 
     #[test]
     fn test_encode_decode_no_corruption() -> Result<(), Box<dyn std::error::Error>> {
@@ -92,7 +84,7 @@ mod tests {
     }
 
     #[test]
-    fn test_encode_decode_four_corruptions() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_encode_decode_two_corruptions() -> Result<(), Box<dyn std::error::Error>> {
         let required = 4;
         let total = 8;
         let f = FEC::new(required, total)?;
@@ -113,12 +105,14 @@ mod tests {
 
         f.encode(&data, output)?;
 
-        // Corrupt 4 shares
-        for i in 1..3 {
-            for j in 1..3 {
-                shares[i].data[j] = b'?'
-            }
-         }
+        //Corrupt 2 shares
+        shares[0].data[0] = b'?';
+        shares[1].data[0] = b'?';
+
+        // The following corruptions are redundant
+        shares[0].data[1] = b'?';
+        shares[0].data[2] = b'?';
+        shares[0].data[3] = b'?';
 
         let result_data = f.decode([].to_vec(), shares)?;
 
@@ -127,7 +121,7 @@ mod tests {
     }
 
     #[test]
-    fn test_encode_decode_five_corruptions_should_fail() {
+    fn test_encode_decode_three_corruptions_should_fail() {
         let required = 4;
         let total = 8;
         let f = FEC::new(required, total).unwrap();
@@ -148,20 +142,15 @@ mod tests {
 
         f.encode(&data, output).unwrap();
 
-        // Corrupt 5 shares
-        for i in 1..3 {
-            for j in 1..3 {
-                shares[i].data[j] = b'?'
-            }
-         }
-         shares[0].data[0] = b'?';
-         shares[0].data[1] = b'?';
+        // Corrupt 3 shares
+
+        shares[0].data[0] = b'?';
+        shares[1].data[0] = b'?';
+        shares[2].data[0] = b'?';
 
         let result_data = f.decode([].to_vec(), shares);
 
         // Expect an error due to too many corruptions
         assert!(result_data.is_err());
     }
-
-
 }
