@@ -60,13 +60,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 # Testing
 To run the tests, run 
-```
+```bash
 cargo test
 ```
 
 # Benchmarks
 To run the benchmarks, run 
-```
+```bash
 cargo bench
 ```
 
