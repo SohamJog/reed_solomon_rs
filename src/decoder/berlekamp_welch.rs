@@ -63,17 +63,13 @@ impl FEC {
     /// errors in given FEC encoded data. It will correct the supplied shares,
     /// mutating the underlying byte slices and reordering the shares
     pub fn correct(&self, shares: &mut Vec<Share>) -> Result<(), Box<dyn std::error::Error>> {
-
         if shares.len() < self.k {
             return Err(format!("Must specify at least the number of required shares").into());
         }
         shares.sort();
 
         // fast path: check to see if there are no errors by evaluating it with the syndrome matrix
-        let synd = match self.syndrome_matrix(&shares) {
-            Ok(synd) => synd,
-            Err(err) => return Err(err.into()),
-        };
+        let synd = self.syndrome_matrix(&shares)?;
 
         let mut buf = vec![0u8; shares[0].data.len()];
         for i in 0..synd.r {
@@ -92,10 +88,7 @@ impl FEC {
                 if buf[j] == 0 {
                     continue;
                 }
-                let data = match self.berlekamp_welch(&shares, j) {
-                    Ok(data) => data,
-                    Err(err) => return Err(err.into()),
-                };
+                let data = self.berlekamp_welch(&shares, j)?;
                 for i in 0..shares.len() {
                     shares[i].data[j] = data[shares[i].number];
                 }
@@ -109,11 +102,10 @@ impl FEC {
         shares: &Vec<Share>,
         index: usize,
     ) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
-     
         let k = self.k;
         let r = shares.len();
         let e = (r - k) / 2; // deg of E polynomial
-        let q = e + k; // deq of Q polynomial
+        let q = e + k; // deg of Q polynomial
 
         if e <= 0 {
             return Err(("Not enough shares!").into());
@@ -176,10 +168,7 @@ impl FEC {
         let mut e_poly = GfPoly(vec![GfVal(1)]);
         e_poly.0.extend_from_slice(&u.0[..e]);
 
-        let (p_poly, rem) = match q_poly.div(e_poly) {
-            Ok((p_poly, rem)) => (p_poly, rem),
-            Err(err) => return Err(err.into()),
-        };
+        let (p_poly, rem) = q_poly.div(e_poly)?;
 
         if !rem.is_zero() {
             return Err(("too many errors to reconstruct").into());

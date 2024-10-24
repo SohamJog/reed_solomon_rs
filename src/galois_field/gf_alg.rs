@@ -108,7 +108,6 @@ impl fmt::Display for GfPoly {
     }
 }
 
-
 impl GfPoly {
     pub fn poly_zero(size: usize) -> GfPoly {
         let out = vec![GfVal(0); size];
@@ -164,7 +163,6 @@ impl GfPoly {
     }
 
     pub fn add(&self, b: &GfPoly) -> GfPoly {
-
         let mut size = self.0.len();
         if b.0.len() > size {
             size = b.0.len();
@@ -208,17 +206,11 @@ impl GfPoly {
             return Ok((GfPoly::poly_zero(1), GfPoly::poly_zero(1)));
         }
 
-
         while b.deg() <= self.deg() {
-
             let leading_p = self.index(self.deg() as i32);
             let leading_b = b.index(b.deg() as i32);
-            let coef = match leading_p.div(leading_b) {
-                Ok(coef) => coef,
-                Err(e) => {
-                    return Err(e.into());
-                }
-            };
+            let coef = leading_p.div(leading_b)?;
+            
             let new_vec = vec![coef];
             q.0.extend(new_vec);
 
@@ -394,7 +386,6 @@ impl GfMat {
             let inv = p_val.inv().map_err(|_| "Inverse calculation failed")?;
 
             self.scale_row(i, inv);
-
 
             for j in (i + 1)..self.r {
                 let leading = self.get(j, i);

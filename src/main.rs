@@ -18,7 +18,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     ]; // Initializes with default Share instances
 
     // The data to encode, needs to be padded to multiple of required
-    let data = b"hello, world! __".to_vec();
+    let data = b"hello, world! __12345678".to_vec();
 
     for i in 0..total {
         println!("Share {}: {:?}", i, shares[i]);
@@ -30,23 +30,41 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         };
         f.encode(&data, output)?;
     }
-    
+
     for i in 0..total {
         println!("Share {}: {:?}", i, shares[i]);
     }
 
     // Corrupting the data
-    //  for i in 1..3 {
-    //     for j in 1..3 {
-    //         shares[i].data[j] = b'?'
-    //     }
+    //  for i in 0..4 {
+    //     //for j in 1..3 {
+    //         shares[i].data[i] = b'?'
+    //     //}
     //  }
-     shares[0].data[0] = b'?';
-    //  shares[0].data[1] = b'?';
+
+    //  for i in 0..8 {
+    //         shares[i].data[i%4] = b'?';
+    //  }
+
+    // for i in 0..4 {
+        
+    // }
+    shares[0].data[1] = b'?';
+    shares[1].data[2] = b'?';
+    shares[2].data[3] = b'?';
+    shares[3].data[4] = b'?';
+    shares[4].data[5] = b'?';
+    // shares[5].data[5] = b'?';
+
+
+
+
+    // shares[2].data[0] = b'?';
+
+    //shares[0].data[1] = b'?';
     //  shares[0].data[2] = b'?';
     //  shares[0].data[3] = b'?';
-     shares[1].data[1] = b'?';
-
+    //shares[1].data[1] = b'?';
 
     let data = f.decode([].to_vec(), shares)?;
 
