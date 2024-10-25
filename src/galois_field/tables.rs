@@ -1,4 +1,4 @@
-use once_cell::sync::Lazy;
+// use once_cell::sync::Lazy;
 
 pub const GF_EXP: [u8; 510] = [
     0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1D, 0x3A, 0x74, 0xE8, 0xCD, 0x87, 0x13, 0x26,
@@ -73,16 +73,36 @@ pub const GF_INVERSE: [u8; 256] = [
     0xE3, 0xE7, 0xB5, 0xEA, 0x03, 0x8F, 0xD3, 0xC9, 0x42, 0xD4, 0xE8, 0x75, 0x7F, 0xFF, 0x7E, 0xFD,
 ];
 
-pub static GF_MUL_TABLE: Lazy<[[u8; 256]; 256]> = Lazy::new(|| {
+const fn generate_gf_mul_table() -> [[u8; 256]; 256] {
     let mut gf_mul_table = [[0u8; 256]; 256];
-
-    for i in 1..256 {
-        for j in 1..256 {
+    let mut i = 1;
+    while i < 256 {
+        let mut j = 1;
+        while j < 256 {
             let log_i = GF_LOG[i] as usize;
             let log_j = GF_LOG[j] as usize;
             gf_mul_table[i][j] = GF_EXP[(log_i + log_j) % 255];
+            j += 1;
         }
+        i += 1;
     }
-
     gf_mul_table
-});
+}
+
+pub static GF_MUL_TABLE: [[u8; 256]; 256] = generate_gf_mul_table();
+
+
+// // TODO: Precompute
+// pub static GF_MUL_TABLE: Lazy<[[u8; 256]; 256]> = Lazy::new(|| {
+//     let mut gf_mul_table = [[0u8; 256]; 256];
+
+//     for i in 1..256 {
+//         for j in 1..256 {
+//             let log_i = GF_LOG[i] as usize;
+//             let log_j = GF_LOG[j] as usize;
+//             gf_mul_table[i][j] = GF_EXP[(log_i + log_j) % 255];
+//         }
+//     }
+
+//     gf_mul_table
+// });

@@ -44,6 +44,7 @@ fn benchmark_encode_decode_one_corruption(c: &mut Criterion) {
             let output = |s: Share| {
                 shares[s.number] = s.clone();
             };
+            // Time 68.225 ns
 
             // Encode
             f.encode(&data, output).unwrap();

@@ -290,6 +290,7 @@ impl FEC {
             indexes[i] = share_id;
         }
 
+        // 0.2 µs
         if invert_matrix(&mut m_dec, k).is_err() {
             return Err(("Matrix inversion failed").into());
         }

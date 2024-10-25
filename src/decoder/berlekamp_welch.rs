@@ -30,7 +30,7 @@ impl FEC {
         if shares.len() == 0 {
             return Err(("Must specify at least one share").into());
         }
-
+ 
         let piece_len = shares[0].data.len();
         let result_len = piece_len * self.k;
         if dst.capacity() < result_len {

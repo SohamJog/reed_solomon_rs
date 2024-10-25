@@ -25,8 +25,9 @@ impl PivotSearcher {
                 continue;
             }
 
+            let row_index = row * self.k;
             for i in 0..self.k {
-                if !self.ipiv[i] && matrix[row * self.k + i] != 0 {
+                if !self.ipiv[i] && matrix[row_index + i] != 0 {
                     self.ipiv[i] = true;
                     return Some((i, row));
                 }
@@ -50,10 +51,12 @@ pub fn invert_matrix(matrix: &mut [u8], k: usize) -> Result<(), &'static str> {
     let mut id_row = vec![0; k];
 
     for col in 0..k {
+        
         let (icol, irow) = match pivot_searcher.search(col, matrix) {
             Some((icol, irow)) => (icol, irow),
             None => return Err("pivot not found"),
         };
+        let colth_row = icol * k ;
 
         if irow != icol {
             swap_row(matrix, k, irow, icol);
@@ -61,7 +64,7 @@ pub fn invert_matrix(matrix: &mut [u8], k: usize) -> Result<(), &'static str> {
 
         indxr[col] = irow;
         indxc[col] = icol;
-        let mut c: u8 = matrix[icol * k + icol];
+        let mut c: u8 = matrix[colth_row + icol];
 
         if c == 0 {
             return Err("singular matrix");
@@ -69,18 +72,18 @@ pub fn invert_matrix(matrix: &mut [u8], k: usize) -> Result<(), &'static str> {
 
         if c != 1 {
             c = GF_INVERSE[c as usize];
-            matrix[icol * k + icol] = 1;
+            matrix[colth_row + icol] = 1;
             for i in 0..k {
-                matrix[icol * k + i] = GF_MUL_TABLE[c as usize][matrix[icol * k + i] as usize];
+                matrix[colth_row + i] = GF_MUL_TABLE[c as usize][matrix[colth_row + i] as usize];
             }
         }
 
         id_row[icol] = 1;
-        if matrix[icol * k..icol * k + k] != id_row {
+        if matrix[colth_row..colth_row + k] != id_row {
             for i in 0..k {
                 if i != icol {
                     if i < icol {
-                        let (slice1, slice2) = matrix.split_at_mut(icol * k);
+                        let (slice1, slice2) = matrix.split_at_mut(colth_row);
                         let row1 = &mut slice1[i * k..i * k + k];
                         let row2 = &mut slice2[0..k];
                         c = row1[icol];
@@ -88,7 +91,7 @@ pub fn invert_matrix(matrix: &mut [u8], k: usize) -> Result<(), &'static str> {
                         addmul(row1, row2, c);
                     } else {
                         let (slice2, slice1) = matrix.split_at_mut(i * k);
-                        let row2 = &mut slice2[icol * k..icol * k + k];
+                        let row2 = &mut slice2[colth_row..colth_row + k];
                         let row1 = &mut slice1[0..k];
                         c = row1[icol];
                         row1[icol] = 0;
