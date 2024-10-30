@@ -1,5 +1,6 @@
 use crate::fec::fec::*;
-use criterion::{criterion_group, criterion_main, Criterion};
+use criterion::measurement::WallTime;
+use criterion::{criterion_group, criterion_main, BenchmarkGroup, Criterion};
 use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
 use reed_solomon_rs::*;
@@ -33,9 +34,16 @@ fn corrupt_shares(shares: &mut Vec<Share>, corruption_level: usize) {
 }
 
 // Encode benchmark
-fn benchmark_encoding(c: &mut Criterion, data_size: usize, required: usize, total: usize) {
+fn benchmark_encoding(
+    c: &mut BenchmarkGroup<WallTime>,
+    data_size: usize,
+    required: usize,
+    total: usize,
+) {
     let data: Vec<u8> = vec![b'x'; data_size];
     let fec = FEC::new(required, total).expect("FEC init failed");
+
+    c.throughput(criterion::Throughput::Bytes(data_size.try_into().unwrap()));
 
     c.bench_function(
         &format!("encode {}B r{} t{}", data_size, required, total),
@@ -59,7 +67,7 @@ fn benchmark_encoding(c: &mut Criterion, data_size: usize, required: usize, tota
 
 // Decode benchmark
 fn benchmark_decoding(
-    c: &mut Criterion,
+    c: &mut BenchmarkGroup<WallTime>,
     data_size: usize,
     required: usize,
     total: usize,
@@ -71,6 +79,7 @@ fn benchmark_decoding(
     // Encode data and corrupt shares
     let mut shares = create_shares(&fec, &data, total);
     corrupt_shares(&mut shares, corruption_level);
+    c.throughput(criterion::Throughput::Bytes(data_size.try_into().unwrap()));
 
     c.bench_function(
         &format!(
@@ -90,12 +99,14 @@ fn benchmark_decoding(
 fn criterion_benchmark(c: &mut Criterion) {
     let data_sizes = [64, 128, 256, 512, 1024, 2048];
     let required = 4; // @akhilsb should we also vary this variable?
-    let total_configs = vec![8, 12]; // For redundancy. @akhilsb is benching across different redundancies necessary? 
+    let total_configs = vec![8, 12]; // For redundancy. @akhilsb is benching across different redundancies necessary?
 
     // Encode benchmarks
     for &data_size in &data_sizes {
         for &total in &total_configs {
-            benchmark_encoding(c, data_size, required, total);
+            let mut group = c.benchmark_group(format!("Galois 8 Encode {:?}", data_size));
+
+            benchmark_encoding(&mut group, data_size, required, total);
         }
     }
 
@@ -104,7 +115,9 @@ fn criterion_benchmark(c: &mut Criterion) {
     for &data_size in &data_sizes {
         for &total in &total_configs {
             for &corruption_level in &corruption_levels {
-                benchmark_decoding(c, data_size, required, total, corruption_level);
+                let mut group = c.benchmark_group(format!("Galois 8 Decode {:?} with corruption level{:?}", data_size, corruption_level));
+
+                benchmark_decoding(&mut group, data_size, required, total, corruption_level);
             }
         }
     }
@@ -116,7 +129,6 @@ criterion_group! {
     targets = criterion_benchmark
 }
 criterion_main!(benches);
-
 
 // use crate::fec::fec::*;
 // use criterion::{criterion_group, criterion_main, Criterion};
