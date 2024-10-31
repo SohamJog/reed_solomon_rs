@@ -18,7 +18,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     ]; // Initializes with default Share instances
 
     // The data to encode, needs to be padded to multiple of required
-    let data = b"hello, world! __12345678".to_vec();
+    let mut data = b"hello, world! __12345678".to_vec();
 
     for i in 0..total {
         println!("Share {}: {:?}", i, shares[i]);
@@ -28,7 +28,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let output = |s: Share| {
             shares[s.number] = s.clone(); // deep copy
         };
-        f.encode(&data, output)?;
+        f.encode(&mut data, output)?;
     }
 
     for i in 0..total {

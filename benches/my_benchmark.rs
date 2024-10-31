@@ -7,7 +7,7 @@ use reed_solomon_rs::*;
 use std::time::Duration;
 
 // Helper
-fn create_shares(fec: &FEC, data: &[u8], total: usize) -> Vec<Share> {
+fn create_shares(fec: &FEC, data: &mut [u8], total: usize) -> Vec<Share> {
     let mut shares = vec![
         Share {
             number: 0,
@@ -40,7 +40,7 @@ fn benchmark_encoding(
     required: usize,
     total: usize,
 ) {
-    let data: Vec<u8> = vec![b'x'; data_size];
+    let mut data: Vec<u8> = vec![b'x'; data_size];
     let fec = FEC::new(required, total).expect("FEC init failed");
 
     c.throughput(criterion::Throughput::Bytes(data_size.try_into().unwrap()));
@@ -59,7 +59,7 @@ fn benchmark_encoding(
                 let output = |s: Share| {
                     shares[s.number] = s.clone();
                 };
-                fec.encode(&data, output).expect("Encoding failed");
+                fec.encode(&mut data, output).expect("Encoding failed");
             })
         },
     );
@@ -73,11 +73,11 @@ fn benchmark_decoding(
     total: usize,
     corruption_level: usize,
 ) {
-    let data: Vec<u8> = vec![b'x'; data_size];
+    let mut data: Vec<u8> = vec![b'x'; data_size];
     let fec = FEC::new(required, total).expect("FEC init failed");
 
     // Encode data and corrupt shares
-    let mut shares = create_shares(&fec, &data, total);
+    let mut shares = create_shares(&fec, &mut data, total);
     corrupt_shares(&mut shares, corruption_level);
     c.throughput(criterion::Throughput::Bytes(data_size.try_into().unwrap()));
 

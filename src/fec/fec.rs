@@ -129,7 +129,7 @@ impl FEC {
     /// The input data must be a multiple of the required number of pieces k.
     /// Padding to this multiple is up to the caller.
 
-    pub fn encode<F>(&self, input: &[u8], mut output: F) -> Result<(), Box<dyn std::error::Error>>
+    pub fn encode<F>(&self, input: &mut [u8], mut output: F) -> Result<(), Box<dyn std::error::Error>>
     where
         F: FnMut(Share),
     {
