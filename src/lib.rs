@@ -38,13 +38,13 @@ mod tests {
             total
         ];
 
-        let mut data = b"hello, world! __".to_vec();
+        let data = b"hello, world! __".to_vec();
 
         let output = |s: Share| {
             shares[s.number] = s.clone();
         };
 
-        f.encode(&mut data, output)?;
+        f.encode(&data, output)?;
 
         let result_data = f.decode([].to_vec(), shares)?;
 
@@ -66,13 +66,13 @@ mod tests {
             total
         ];
 
-        let mut data = b"hello, world! __".to_vec();
+        let data = b"hello, world! __".to_vec();
 
         let output = |s: Share| {
             shares[s.number] = s.clone();
         };
 
-        f.encode(&mut data, output)?;
+        f.encode(&data, output)?;
 
         // Corrupt 1 share
         shares[1].data[1] = b'?';
@@ -97,13 +97,13 @@ mod tests {
             total
         ];
 
-        let mut data = b"hello, world! __".to_vec();
+        let data = b"hello, world! __".to_vec();
 
         let output = |s: Share| {
             shares[s.number] = s.clone();
         };
 
-        f.encode(&mut data, output)?;
+        f.encode(&data, output)?;
 
         //Corrupt 2 shares
         shares[0].data[0] = b'?';
@@ -134,13 +134,13 @@ mod tests {
             total
         ];
 
-        let mut data = b"hello, world! __".to_vec();
+        let data = b"hello, world! __".to_vec();
 
         let output = |s: Share| {
             shares[s.number] = s.clone();
         };
 
-        f.encode(&mut data, output).unwrap();
+        f.encode(&data, output).unwrap();
 
         // Corrupt 3 shares
 
