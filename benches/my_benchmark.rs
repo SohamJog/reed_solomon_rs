@@ -89,7 +89,7 @@ fn benchmark_decoding(
         |b| {
             b.iter(|| {
                 let decoded = fec.decode(vec![], shares.clone()).expect("Decoding failed");
-                assert_eq!(&decoded, &data); // Verify correctness. @akhilsb can this be avoided?
+                assert_eq!(&decoded, &data);
             })
         },
     );
@@ -97,9 +97,9 @@ fn benchmark_decoding(
 
 // All benchmarks
 fn criterion_benchmark(c: &mut Criterion) {
-    let data_sizes = [64, 128, 256, 512, 1024, 2048];
-    let required = 4; // @akhilsb should we also vary this variable?
-    let total_configs = vec![8, 12]; // For redundancy. @akhilsb is benching across different redundancies necessary?
+    let data_sizes = [64, 512, 1024, 2048];
+    let required = 4;
+    let total_configs = vec![8, 12];
 
     // Encode benchmarks
     for &data_size in &data_sizes {
