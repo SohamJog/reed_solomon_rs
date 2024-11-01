@@ -7,7 +7,7 @@ description = "A Reed-Solomon Error Correction Code Library that uses the Berlek
 repository = "https://github.com/SohamJog/reed_solomon_rs"
 license = "MIT"
 keywords = ["reed-solomon", "error-correction", "rust", "library"]
-categories = ["encoding", "cryptography"]
+categories = ["encoding", "decoding", "cryptography"]
 
 
 [dependencies]
