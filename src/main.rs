@@ -18,7 +18,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     ]; // Initializes with default Share instances
 
     // The data to encode, needs to be padded to multiple of required
-    let data = b"hello, world! __1234567".to_vec();
+    let data: Vec<u8> = b"hello, world! __1234567".to_vec();
 
     for i in 0..total {
         println!("Share {}: {:?}", i, shares[i]);
