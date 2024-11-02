@@ -79,11 +79,11 @@ Reed-Solomon encoding divides data into *k* original shares, generating *n* tota
 
 The encoding process works as follows:
 
-1. **Divide Data into Shares**: The input data is split into *k* shares and used as coefficients of a polynomial \( P(x) \) of degree *k - 1*.
+1. **Divide Data into Shares**: The input data is split into *k* shares and used as coefficients of a polynomial $$ \( P(x) \) $$ of degree *k - 1*.
 
-2. **Create Polynomial**: This polynomial, \( P(x) \), is evaluated at *n* distinct points, yielding *n* shares. Each point corresponds to a unique share, making it possible to reconstruct the original polynomial from any subset of *k* shares.
+2. **Create Polynomial**: This polynomial, $$ \( P(x) \) $$, is evaluated at *n* distinct points, yielding *n* shares. Each point corresponds to a unique share, making it possible to reconstruct the original polynomial from any subset of *k* shares.
 
-3. **Redundant Data for Error Correction**: Using Lagrange interpolation, any *k* shares can recover the polynomial \( P(x) \), which encodes the original data. The algorithm’s error correction capability, *t*, is determined by the number of redundant shares, allowing correction of up to *t* errors, where \( t = \frac{n - k}{2} \).
+3. **Redundant Data for Error Correction**: Using Lagrange interpolation, any *k* shares can recover the polynomial $$ \( P(x) \) $$, which encodes the original data. The algorithm’s error correction capability, *t*, is determined by the number of redundant shares, allowing correction of up to *t* errors, where $$\( t = \frac{n - k}{2} \) $$.
 
 This approach ensures that the encoded data can withstand loss or corruption of up to *n - k* shares, making Reed-Solomon encoding ideal for scenarios requiring robust error correction.
 
@@ -95,27 +95,27 @@ The Berlekamp-Welch algorithm decodes Reed-Solomon codes by identifying both the
 1. **Input Parameters**:
    - The total number of shares (symbols) received, *n*.
    - The degree of the original message polynomial, *k - 1*, where *k* is the minimum number of shares required to reconstruct the message.
-   - The maximum number of correctable errors, *t*, which satisfies \( t = \frac{n - k}{2} \).
+   - The maximum number of correctable errors, *t*, which satisfies $$\( t = \frac{n - k}{2} \)$$.
 
 2. **Define Polynomials**:
-   - The message polynomial, \( P(x) \), represents the original data.
-   - An error-locator polynomial, \( E(x) \), which zeros out the positions of errors in the received data.
-   - An error-evaluator polynomial, \( Q(x) \), that equals the product \( P(x) \cdot E(x) \) at all non-erroneous points.
+   - The message polynomial, $$ \( P(x) \) $$, represents the original data.
+   - An error-locator polynomial, $$\( E(x) \)$$, which zeros out the positions of errors in the received data.
+   - An error-evaluator polynomial, $$\( Q(x) \)$$, that equals the product $$\( P(x) \cdot E(x) \)$$ at all non-erroneous points.
 
 3. **Construct Key Equations**:
-   - For each share \( (a_i, b_i) \), where \( a_i \) is the evaluation point and \( b_i \) is the received value, we set up equations \( b_i \cdot E(a_i) = Q(a_i) \).
-   - These form a system of linear equations involving the coefficients of \( E(x) \) and \( Q(x) \).
+   - For each share $$\( (a_i, b_i) \)$$, where $$\( a_i \)$$ is the evaluation point and $$\( b_i \)$$ is the received value, we set up equations  $$\( b_i \cdot E(a_i) = Q(a_i) \)$$.
+   - These form a system of linear equations involving the coefficients of $$ \( E(x) \) $$ and $$ \( Q(x) \) $$.
 
 4. **Solve the System**:
-   - Use Gaussian elimination (or other linear system-solving techniques) to solve for the coefficients of \( E(x) \) and \( Q(x) \).
-   - This step has a time complexity of \( O(n^3) \), where *n* is the number of shares.
+   - Use Gaussian elimination (or other linear system-solving techniques) to solve for the coefficients of $$ \( E(x) \) $$ and $$ \( Q(x) \) $$.
+   - This step has a time complexity of $$ \( O(n^3) \) $$, where *n* is the number of shares.
 
 5. **Recover the Message Polynomial**:
-   - Divide \( Q(x) \) by \( E(x) \) to recover the original message polynomial \( P(x) \).
-   - Evaluate \( P(x) \) at the error-free points to reconstruct the message.
+   - Divide $$ \( Q(x) \) $$ by $$ \( E(x) \) $$ to recover the original message polynomial $$ \( P(x) \) $$.
+   - Evaluate $$ \( P(x) \) $$ at the error-free points to reconstruct the message.
 
 6. **Error Correction**:
-   - Use the roots of \( E(x) \) to identify erroneous positions and correct them by recalculating their values using \( P(x) \).
+   - Use the roots of $$ \( E(x) \) $$ to identify erroneous positions and correct them by recalculating their values using $$ \( P(x) \) $$.
 
 This algorithm reconstructs the original data while correcting errors up to *t* corruptions in the shares.
 
