@@ -70,7 +70,7 @@ To run the benchmarks, run
 cargo bench
 ```
 
-# Reed-Solomon Algorithm Overview
+# Reed-Solomon Error-Correction Algorithm Overview
 Reed-Solomon Error Correction Codes (RS-ECC) encode data into multiple shares, allowing recovery even if some shares are lost or corrupted. This library uses polynomial encoding and the Berlekamp-Welch algorithm to reconstruct and correct data efficiently. RS-ECC is widely applied in technologies such as CDs, DVDs, QR codes, satellite communications, DSL, WiMAX, and RAID 6 storage systems, where data integrity is essential.
 
 ### Reed-Solomon Encoding Algorithm Summary
@@ -88,7 +88,7 @@ The encoding process works as follows:
 This approach ensures that the encoded data can withstand loss or corruption of up to *n - k* shares, making Reed-Solomon encoding ideal for scenarios requiring robust error correction.
 
 
-### Reed-Solomon Decoding Algorithm Summary (Berlekamp-Welch)
+### Berlekamp-Welch Decoding Algorithm Summary (Error Correction)
 
 The Berlekamp-Welch algorithm decodes Reed-Solomon codes by identifying both the original message polynomial and an error-locator polynomial, which helps determine the positions of corrupted symbols. Here’s a step-by-step summary of the algorithm:
 
