@@ -166,10 +166,7 @@ The limits for encoding and decoding are governed by the parameters:
 
 To enable error correction, it is necessary that \( n > k \). The maximum number of correctable errors \( t \) can be calculated as:
 
-\[
-t = \frac{n - k}{2}
-\]
-
+$$ t = \frac{n - k}{2} $$
 
 # License
 This project is licensed under the MIT license. See the `LICENSE` file for more details
