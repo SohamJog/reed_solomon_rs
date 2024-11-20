@@ -1,6 +1,7 @@
 use crate::galois_field::tables::{GF_EXP, GF_MUL_TABLE};
 use crate::math::addmul::addmul;
 use crate::math::pivot_searcher::{create_inverted_vdm, invert_matrix};
+use serde::{Deserialize, Serialize};
 use std::error::Error;
 
 /// `FEC` (Forward Error Correction) struct represents a Reed-Solomon encoder/decoder.
@@ -26,7 +27,7 @@ pub struct FEC {
 /// Each `Share` is identified by its `number`, which indicates its position among the total shares,
 /// and contains the actual encoded `data`. During encoding, multiple shares are generated, and
 /// during decoding, a sufficient number of shares are required to not be corrupt reconstruct the original data
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Share {
     /// Number is essentially the X co-ordinate on the encoding polynomial
     pub number: usize,
@@ -129,7 +130,11 @@ impl FEC {
     /// The input data must be a multiple of the required number of pieces k.
     /// Padding to this multiple is up to the caller.
 
-    pub fn encode<F>(&self, original_input: &[u8], mut output: F) -> Result<(), Box<dyn std::error::Error>>
+    pub fn encode<F>(
+        &self,
+        original_input: &[u8],
+        mut output: F,
+    ) -> Result<(), Box<dyn std::error::Error>>
     where
         F: FnMut(Share),
     {
@@ -142,7 +147,7 @@ impl FEC {
         } else {
             original_size + (k - (original_size % k))
         };
-        
+
         let mut input: Box<[u8]> = vec![b'_' as u8; size].into_boxed_slice();
 
         input[..original_size].copy_from_slice(original_input);

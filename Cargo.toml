@@ -1,6 +1,6 @@
 [package]
 name = "reed_solomon_rs"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Soham Jog <jogsoham2003@gmail.com>"]
 edition = "2021"
 description = "A Reed-Solomon Error Correction Code Library that uses the Berlekamp Welch Algorithm"
@@ -12,6 +12,7 @@ categories = ["encoding", "cryptography"]
 
 [dependencies]
 once_cell = "1.19.0" 
+serde = { version = "1.0", features = ["derive"] }
 
 [dev-dependencies]
 criterion = "0.3"
