@@ -2,8 +2,10 @@ use crate::fec::fec::*;
 use reed_solomon_rs::*;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let required = 4;
-    let total = 8;
+    // let required = 4;
+    // let total = 8;
+    let required = 2;
+    let total = 3;
 
     // This is a *FEC which required 'required' pieces for reconstruction at minimum
     // and generate 'total' total pieces
@@ -18,12 +20,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     ]; // Initializes with default Share instances
 
     // The data to encode, needs to be padded to multiple of required
-    let data: Vec<u8> = b"hello, world! __1234567".to_vec();
-
-    for i in 0..total {
-        println!("Share {}: {:?}", i, shares[i]);
-    }
-
+    //let data: Vec<u8> = b"hello, world! __1234567".to_vec();
+    let data: Vec<u8> = b"Hi".to_vec();
     {
         let output = |s: Share| {
             shares[s.number] = s.clone(); // deep copy
@@ -49,11 +47,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // for i in 0..4 {
         
     // }
-    shares[0].data[1] = b'?';
-    shares[1].data[2] = b'?';
-    shares[2].data[3] = b'?';
-    shares[3].data[4] = b'?';
-    shares[4].data[5] = b'?';
+    // shares[0].data[1] = b'?';
+    // shares[1].data[2] = b'?';
+    // shares[2].data[3] = b'?';
+    // shares[3].data[4] = b'?';
+    // shares[4].data[5] = b'?';
     // shares[5].data[5] = b'?';
 
 

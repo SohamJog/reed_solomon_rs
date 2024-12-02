@@ -4,6 +4,7 @@ use crate::math::pivot_searcher::{create_inverted_vdm, invert_matrix};
 use serde::{Deserialize, Serialize};
 use std::error::Error;
 
+
 /// `FEC` (Forward Error Correction) struct represents a Reed-Solomon encoder/decoder.
 ///
 /// This struct is used to encode data into multiple pieces and decode it back, even if
@@ -246,7 +247,10 @@ impl FEC {
     /// Note that the data is not necessarily sent to output ordered by the piece
     /// number.
     ///
+
+    /// Rebuild using Lagrange interpolation
     /// `rebuild()` assumes that you have already called Correct or did not need to.
+
     pub fn rebuild<F>(
         &self,
         mut shares: Vec<Share>,

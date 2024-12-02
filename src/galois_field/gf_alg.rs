@@ -35,8 +35,13 @@ impl GfVal {
         if self.0 == 0 {
             return Ok(GfVal(0));
         }
+
+        let mut log_result = GF_LOG[self.gfval_usize()] as i32 - GF_LOG[b.gfval_usize()] as i32;
+        if log_result < 0 {
+            log_result += 255;
+        }
         Ok(GfVal(
-            GF_EXP[(GF_LOG[self.gfval_usize()] as i32 - GF_LOG[b.gfval_usize()] as i32) as usize],
+            GF_EXP[log_result as usize],
         ))
     }
 
