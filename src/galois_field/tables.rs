@@ -91,7 +91,6 @@ const fn generate_gf_mul_table() -> [[u8; 256]; 256] {
 
 pub static GF_MUL_TABLE: [[u8; 256]; 256] = generate_gf_mul_table();
 
-
 // // TODO: Precompute
 // pub static GF_MUL_TABLE: Lazy<[[u8; 256]; 256]> = Lazy::new(|| {
 //     let mut gf_mul_table = [[0u8; 256]; 256];

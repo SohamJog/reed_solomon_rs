@@ -51,12 +51,11 @@ pub fn invert_matrix(matrix: &mut [u8], k: usize) -> Result<(), &'static str> {
     let mut id_row = vec![0; k];
 
     for col in 0..k {
-        
         let (icol, irow) = match pivot_searcher.search(col, matrix) {
             Some((icol, irow)) => (icol, irow),
             None => return Err("pivot not found"),
         };
-        let colth_row = icol * k ;
+        let colth_row = icol * k;
 
         if irow != icol {
             swap_row(matrix, k, irow, icol);
@@ -127,7 +126,6 @@ pub fn invert_matrix(matrix: &mut [u8], k: usize) -> Result<(), &'static str> {
 }
 
 pub fn create_inverted_vdm(vdm: &mut [u8], k: usize) {
-
     if k == 1 {
         vdm[0] = 1;
         return;
@@ -164,7 +162,6 @@ pub fn create_inverted_vdm(vdm: &mut [u8], k: usize) {
         for col in 0..k {
             vdm[col * k + row] = mul_t_inv[b[col]];
         }
-
     }
 }
 

@@ -40,9 +40,7 @@ impl GfVal {
         if log_result < 0 {
             log_result += 255;
         }
-        Ok(GfVal(
-            GF_EXP[log_result as usize],
-        ))
+        Ok(GfVal(GF_EXP[log_result as usize]))
     }
 
     pub fn add(self, b: GfVal) -> GfVal {
@@ -215,7 +213,7 @@ impl GfPoly {
             let leading_p = self.index(self.deg() as i32);
             let leading_b = b.index(b.deg() as i32);
             let coef = leading_p.div(leading_b)?;
-            
+
             let new_vec = vec![coef];
             q.0.extend(new_vec);
 
