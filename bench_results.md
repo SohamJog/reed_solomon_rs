@@ -1,6 +1,6 @@
 # Benchmark Results
 
-| Operation | Data Size | Nodes (r) | Faults (t) | Time (µs) |
+| Operation | Data Size | Required Nodes (t) | Total Nodes (n) | Time (µs) |
 |-----------|----------|-----------|------------|-----------|
 | Galois 8 Encode | 64B  | 4 | 8  | 0.478 - 0.512 |
 | Galois 8 Encode | 64B  | 4 | 12 | 0.740 - 0.79 |
@@ -35,3 +35,6 @@
 | Galois 8 Decode (corruption 2) | 2048B | 4 | 12 | 22.621 - 22.752 |
 | Galois 8 Decode (corruption 3) | 2048B | 4 | 12 | 28.784 - 29.112 |
 
+---
+
+Corruption levels are 1 corruption, t/2 corruptions, and t-1 corruptions.
