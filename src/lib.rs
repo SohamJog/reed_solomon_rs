@@ -2,6 +2,7 @@
 pub mod galois_field {
     pub mod gf_alg;
     pub mod tables;
+    pub mod largefield;
 }
 
 /// Contains auxiliary math functions.

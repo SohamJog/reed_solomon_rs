@@ -3,6 +3,7 @@ use crate::math::addmul::addmul;
 use crate::math::pivot_searcher::{create_inverted_vdm, invert_matrix};
 use serde::{Deserialize, Serialize};
 use std::error::Error;
+use crate::galois_field::largefield::LargeField;
 
 /// `FEC` (Forward Error Correction) struct represents a Reed-Solomon encoder/decoder.
 ///
